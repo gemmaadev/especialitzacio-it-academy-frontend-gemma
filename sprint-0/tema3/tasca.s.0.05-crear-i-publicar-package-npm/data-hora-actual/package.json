@@ -1,0 +1,17 @@
+{
+  "name": "data-hora-actual",
+  "version": "0.0.1",
+  "description": "Mostra la data i hora actual per consola",
+  "keywords": [
+    "data",
+    "hora"
+  ],
+  "license": "ISC",
+  "author": "Gemma Maeso",
+  "type": "commonjs",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node index.js"
+  }
+}
