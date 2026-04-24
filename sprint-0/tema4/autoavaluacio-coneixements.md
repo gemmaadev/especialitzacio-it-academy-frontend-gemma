@@ -6,18 +6,15 @@
 
 2. **Quins ordres bàsiques fas servir per treballar amb git?**
 
-Les més importants:
-
 * git init → crear repositori  
 * git add . → preparar canvis  
 * git commit \-m "missatge" → guardar canvis  
 * git status → veure estat  
 * git push → pujar a GitHub  
 * git pull → baixar canvis
+* git merge "nom de la branca" → integra els canvis d’una altra branca dins de la branca en la qual estàs treballant actualment
 
 3. **Saps fer pull-requests i revisar-los?**
-
-Sí,
 
 * Fas canvis en una branca (branch)  
 * Puges els canvis a GitHub  
