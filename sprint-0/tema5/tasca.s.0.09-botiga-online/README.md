@@ -48,7 +48,7 @@
 
 ## 📸 Previsualització
 
-![Sitemap BotigaTech](sitemap-botigatech.png)
+![Sitemap BotigaTech](sitemap-biotech.jpg)
 
 > Per obrir el diagrama interactiu, importa el fitxer `sitemap-botigatech.xml` a [Draw.io](https://app.diagrams.net/).
 
