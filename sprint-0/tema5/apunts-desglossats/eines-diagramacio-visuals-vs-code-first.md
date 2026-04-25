@@ -10,7 +10,7 @@ Plantilles predefinides per UML i ERD.
 
 **Draw.io: Tutorial en 10 minuts**  
 Vídeo ràpid per començar a crear diagrames amb Draw.io.  
-[https://www.youtube.com/watch?v=2O8pkybH6po\&time\_continue=0\&source\_ve\_path=MjM4NTE\&embeds\_referring\_euri=https%3A%2F%2Fitacademy.barcelonactiva.cat%2F](https://www.youtube.com/watch?v=2O8pkybH6po&time_continue=0&source_ve_path=MjM4NTE&embeds_referring_euri=https%3A%2F%2Fitacademy.barcelonactiva.cat%2F)
+[https://www.youtube.com/watch?v=z-o1aEBmyTg](https://www.youtube.com/watch?v=z-o1aEBmyTg)
 
 **Mermaid.js \+ VS Code**  
 Integració directa. Suport de Mermaid en Markdown directament a VS Code.  
