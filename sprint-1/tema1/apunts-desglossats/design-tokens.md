@@ -20,15 +20,15 @@ Els design tokens s'organitzen en tres nivells: tokens primitius (valors crus), 
 
 **Tokens primitius (o globals)** — els valors bruts del sistema. Defineixen totes les opcions possibles, però no indiquen on s'han d'usar:
 
-![](imatges/tokens-primitius.png)
+![](../imatges/tokens-primitius.png)
 
 **Tokens semàntics** — donen context d'ús. Referencien els tokens primitius però amb noms que indiquen la seva funció:
 
-![](imatges/tokens-semantics.png)
+![](../imatges/tokens-semantics.png)
 
 **Tokens de component** — específics d'un component concret:
 
-![](imatges/tokens-component.png)
+![](../imatges/tokens-component.png)
 
 **Tokens de color**
 
@@ -36,7 +36,7 @@ El color és la manera més ràpida amb la qual el cervell processa la identitat
 
 Un sistema de colors ben estructurat amb tokens:
 
-![](imatges/tokens-color.png)
+![](../imatges/tokens-color.png)
 
 La clau és nomenar els tokens semàntics per **propòsit** (per exemple, `color-text-primary`) i no per **aparença** (per exemple, `color-gray-900`). Si canvies el color del text de gris a negre, el nom `color-text-primary` segueix sent vàlid, però `color-gray-900` deixa de tenir sentit.
 
@@ -44,7 +44,7 @@ La clau és nomenar els tokens semàntics per **propòsit** (per exemple, `color
 
 Els tokens de tipografia especifiquen propietats relacionades amb el text. Inclouen famílies de fonts, mides de font, alçades de línia, espaiat entre lletres i pesos de font.
 
-![](imatges/tokens-tipografia.png)
+![](../imatges/tokens-tipografia.png)
 
 **Tokens d'espaiat**
 
@@ -52,13 +52,13 @@ Els tokens primitius d'espaiat inclouen tots els valors de padding, margin i spa
 
 La majoria de sistemes d'espaiat usen una base de **8px** (o 4px per als valors més petits). Tota la resta de valors són múltiples d'aquesta base:
 
-![](imatges/tokens-espaiat.png)
+![](../imatges/tokens-espaiat.png)
 
 **Altres tipus de tokens**
 
 A més de colors, tipografia i espaiat, els tokens poden cobrir: border radius (arrodoniment de cantonades), shadows (ombres), breakpoints (punts de trencament per al disseny responsiu), durades (timing d'animacions i transicions) i opacity.
 
-![](imatges/altres-tipus-tokens.png)
+![](../imatges/altres-tipus-tokens.png)
 
 **Com s'implementen al codi**
 
@@ -66,17 +66,17 @@ Els design tokens són independents de plataforma. Típicament es defineixen i e
 
 Per al web, la manera més habitual és crear un fitxer `tokens.css` o `variables.css` a l'arrel del projecte:
 
-![](imatges/com-s-implementa-al-codi.png)
+![](../imatges/com-s-implementa-al-codi.png)
 
 I importar-lo al fitxer principal:
 
-![](imatges/impotar-al-fitxer-principal.png)
+![](../imatges/impotar-al-fitxer-principal.png)
 
 **Design Tokens i tematització (Dark Mode)**
 
 Canviar només el valor del token del tema cascada a través de tot el sistema, afectant tots els elements que el referencien directament o indirectament. Per exemple, per crear un tema fosc, només caldria canviar el token `theme.bg.surface` a un valor fosc de referència com "colors.black", i totes les superfícies i targetes s'actualitzarien automàticament.
 
-![](imatges/design-tokens-i-tematitzacio.png)
+![](../imatges/design-tokens-i-tematitzacio.png)
 
 **Resum**
 
