@@ -23,10 +23,10 @@ Quan desenvolupes una variació d'un component en aïllament, la deses com una s
 Una story és essencialment: "aquí tens el component `Button` en el seu estat `disabled` amb el text `Enviar`". Cada story descriu un estat concret d'un component.
 
 Un exemple bàsic d'una story en format CSF (Component Story Format):
+![](../imatges/story-format-csf.png)
 
-![][image1]  
 **Com s'instal·la i s'inicia**  
-**![][image2]**
+![](../imatges/arrencar-storybook.png)
 
 Storybook arrenca en un port diferent al de la teva app (per defecte `localhost:6006`) i mostra la interfície del catàleg de components.
 
