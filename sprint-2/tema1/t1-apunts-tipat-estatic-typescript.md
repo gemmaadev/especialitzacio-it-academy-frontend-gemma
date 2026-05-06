@@ -10,7 +10,7 @@ Els quatre beneficis principals: **detecció d'errors en compilació** (no en pr
 
 **2\. La sintaxi bàsica: anotar tipus**
 
-```typscript
+```typescript
 // Variables
 let nom: string = 'Anna';
 let edat: number = 25;
@@ -42,41 +42,136 @@ function mostrarPerfil(usuari: { nom: string; edat: number }): void {
 
 Una interfície defineix el contracte que un objecte ha de complir. No és una classe ni genera codi JavaScript: és purament una definició de forma que desapareix en compilació.
 
-| interface Usuari {  readonly id: number;    // no modificable un cop creat  nom: string;  email: string;  edat?: number;          // propietat opcional}// Estendre interfíciesinterface Empleat extends Usuari {  empresa: string;  sou: number;}// Implementar en classesclass RepositoriUsuari implements Repositori\<Usuari\> {  async trobarPerId(id: number): Promise\<Usuari | null\> { /\* ... \*/ }  async guardar(usuari: Usuari): Promise\<Usuari\> { /\* ... \*/ }} |
-| :---- |
+```typescript
+interface Usuari {
+  readonly id: number;    // no modificable un cop creat
+  nom: string;
+  email: string;
+  edat?: number;          // propietat opcional
+}
+
+// Estendre interfícies
+interface Empleat extends Usuari {
+  empresa: string;
+  sou: number;
+}
+
+// Implementar en classes
+class RepositoriUsuari implements Repositori<Usuari> {
+  async trobarPerId(id: number): Promise<Usuari | null> { /* ... */ }
+  async guardar(usuari: Usuari): Promise<Usuari> { /* ... */ }
+}
+```
 
 **`type` vs `interface`** — usa `interface` per a formes d'objectes i contractes de classe (suporta `extends` i declaration merging). Usa `type` per a unions (`string | number`), interseccions (`Tipus1 & Tipus2`), tuples i tipus primitius.
 
 **4\. Union, Intersection i Utility Types**
 
-| // Union: un tipus O l'altretype ID \= string | number;type Estat \= 'carregant' | 'exit' | 'error';// Intersection: combina tots dos tipustype AdminUsuari \= Usuari & { permisos: string\[\] };// Utility Types: modificar tipus existentstype ActualitzacioUsuari \= Partial\<Usuari\>;     // totes les propietats opcionalstype PerfilPublic \= Pick\<Usuari, 'nom' | 'email'\>; // escollir propietatstype UsuariSenseId \= Omit\<Usuari, 'id'\>;         // excloure propietatstype UsuariImmutable \= Readonly\<Usuari\>;          // tot readonlytype RolMap \= Record\<'admin' | 'editor', string\[\]\>; // objecte tipat |
-| :---- |
+```typescript
+// Union: un tipus O l'altre
+type ID = string | number;
+type Estat = 'carregant' | 'exit' | 'error';
+
+// Intersection: combina tots dos tipus
+type AdminUsuari = Usuari & { permisos: string[] };
+
+// Utility Types: modificar tipus existents
+type ActualitzacioUsuari = Partial<Usuari>;     // totes les propietats opcionals
+type PerfilPublic = Pick<Usuari, 'nom' | 'email'>; // escollir propietats
+type UsuariSenseId = Omit<Usuari, 'id'>;         // excloure propietats
+type UsuariImmutable = Readonly<Usuari>;          // tot readonly
+type RolMap = Record<'admin' | 'editor', string[]>; // objecte tipat
+```
 
 **5\. Type Narrowing: estrenyer unions en temps d'execució**
 
 Quan una variable és d'un union type, TypeScript no sap quin tipus concret és. El narrowing és el procés de restringir el tipus dins d'un bloc condicional:
 
-| function processar(valor: string | number) {  if (typeof valor \=== 'string') {    valor.toUpperCase();  // ← TypeScript: string  } else {    valor.toFixed(2);     // ← TypeScript: number  }}// Discriminated Union: el patró més potent per a estatstype EstatAPI \=  | { tipus: 'carregant' }  | { tipus: 'exit'; dades: Usuari\[\] }  | { tipus: 'error'; missatge: string };function renderitzar(estat: EstatAPI) {  switch (estat.tipus) {    case 'exit': return estat.dades;       // TypeScript sap que és l'exit    case 'error': return estat.missatge;   // TypeScript sap que és l'error  }} |
-| :---- |
+```typescript
+function processar(valor: string | number) {
+  if (typeof valor === 'string') {
+    valor.toUpperCase();  // ← TypeScript: string
+  } else {
+    valor.toFixed(2);     // ← TypeScript: number
+  }
+}
+
+// Discriminated Union: el patró més potent per a estats
+type EstatAPI =
+  | { tipus: 'carregant' }
+  | { tipus: 'exit'; dades: Usuari[] }
+  | { tipus: 'error'; missatge: string };
+
+function renderitzar(estat: EstatAPI) {
+  switch (estat.tipus) {
+    case 'exit': return estat.dades;       // TypeScript sap que és l'exit
+    case 'error': return estat.missatge;   // TypeScript sap que és l'error
+  }
+}
+```
 
 **6\. Genèrics: reutilitzar amb seguretat de tipus**
 
 Els genèrics permeten escriure una sola implementació que funciona per a múltiples tipus, sense perdre la informació del tipus ni recórrer a `any`.
 
-| // Funció genèrica: T és un marcador de posició que es concreta en cada úsfunction primer\<T\>(arr: T\[\]): T | undefined {  return arr\[0\];}const nom \= primer(\['Anna', 'Gema'\]);  // → string (inferit)const num \= primer(\[10, 20, 30\]);      // → number (inferit)// Genèric amb restricciófunction obtenirLongitud\<T extends { length: number }\>(x: T): number {  return x.length;  // TypeScript sap que T té .length}// Interfície genèrica per a totes les respostes de l'APIinterface RespotaAPI\<T\> {  data: T;  status: 'success' | 'error';  message?: string;}async function fetchData\<T\>(url: string): Promise\<RespotaAPI\<T\>\> {  const res \= await fetch(url);  return res.json();}// Ús tipat completconst usuaris \= await fetchData\<Usuari\[\]\>('/api/usuaris');usuaris.data\[0\].nom;  // ✅ autocompletat complet |
-| :---- |
+```typescript
+// Funció genèrica: T és un marcador de posició que es concreta en cada ús
+function primer<T>(arr: T[]): T | undefined {
+  return arr[0];
+}
+
+const nom = primer(['Anna', 'Gema']);  // → string (inferit)
+const num = primer([10, 20, 30]);      // → number (inferit)
+
+// Genèric amb restricció
+function obtenirLongitud<T extends { length: number }>(x: T): number {
+  return x.length;  // TypeScript sap que T té .length
+}
+
+// Interfície genèrica per a totes les respostes de l'API
+interface RespotaAPI<T> {
+  data: T;
+  status: 'success' | 'error';
+  message?: string;
+}
+
+async function fetchData<T>(url: string): Promise<RespotaAPI<T>> {
+  const res = await fetch(url);
+  return res.json();
+}
+
+// Ús tipat complet
+const usuaris = await fetchData<Usuari[]>('/api/usuaris');
+usuaris.data[0].nom;  // ✅ autocompletat complet
+```
 
 **7\. Configuració: `tsconfig.json`**
 
 El fitxer `tsconfig.json` és el centre de control del compilador TypeScript. Sense ell, TypeScript usa valors per defecte que probablement no s'ajusten al projecte.
 
-| tsc \--init   \# genera un tsconfig.json amb valors per defecte comentats |
-| :---- |
+```bash
+tsc --init   # genera un tsconfig.json amb valors per defecte comentats
+```
 
 **Les decisions clau:**
 
-| {  "compilerOptions": {    "target": "ES2022",        // versió JS de sortida    "module": "ESNext",        // format dels imports/exports    "strict": true,            // activa TOTES les comprovacions rigoroses ← IMPRESCINDIBLE    "outDir": "./dist",        // on va el JavaScript compilat    "rootDir": "./src",        // on estan els fitxers .ts    "sourceMap": true,         // permet debugar el .ts original    "esModuleInterop": true,   // compatibilitat d'imports CommonJS    "skipLibCheck": true,      // no comprova .d.ts de biblioteques terceres    "jsx": "react-jsx"         // per a projectes React  },  "include": \["src/\*\*/\*"\],  "exclude": \["node\_modules", "dist"\]} |
-| :---- |
+```json
+{
+  "compilerOptions": {
+    "target": "ES2022",        // versió JS de sortida
+    "module": "ESNext",        // format dels imports/exports
+    "strict": true,            // activa TOTES les comprovacions rigoroses ← IMPRESCINDIBLE
+    "outDir": "./dist",        // on va el JavaScript compilat
+    "rootDir": "./src",        // on estan els fitxers .ts
+    "sourceMap": true,         // permet debugar el .ts original
+    "esModuleInterop": true,   // compatibilitat d'imports CommonJS
+    "skipLibCheck": true,      // no comprova .d.ts de biblioteques terceres
+    "jsx": "react-jsx"         // per a projectes React
+  },
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "dist"]
+}
+```
 
 `"strict": true` és la decisió més important. Activa automàticament: `noImplicitAny` (obliga a declarar els tipus), `strictNullChecks` (`null` i `undefined` son tipus propis i cal gestionar-los explícitament), i altres comprovacions que garanteixen el màxim de seguretat.
 
@@ -84,15 +179,37 @@ El fitxer `tsconfig.json` és el centre de control del compilador TypeScript. Se
 
 Quan una biblioteca JS no inclou fitxers `.d.ts`, TypeScript llança l'error `TS7016: Could not find a declaration file`. El flux de solucions:
 
-| \# 1\. Primer intent: buscar @types a DefinitelyTypednpm install @types/express \--save-devnpm install @types/lodash \--save-devnpm install @types/jest \--save-dev\# 2\. Si no hi ha @types: escriure un fitxer de declaració propi\# src/declarations.d.tsdeclare module 'nom-biblioteca-sense-tipus' {  export function fer(x: number): string;}\# 3\. Solució ràpida (silencia l'error, sense tipus real):\# src/declarations.d.tsdeclare module 'nom-biblioteca-sense-tipus'; |
-| :---- |
+```bash
+# 1. Primer intent: buscar @types a DefinitelyTyped
+npm install @types/express --save-dev
+npm install @types/lodash --save-dev
+npm install @types/jest --save-dev
+
+# 2. Si no hi ha @types: escriure un fitxer de declaració propi
+# src/declarations.d.ts
+declare module 'nom-biblioteca-sense-tipus' {
+  export function fer(x: number): string;
+}
+
+# 3. Solució ràpida (silencia l'error, sense tipus real):
+# src/declarations.d.ts
+declare module 'nom-biblioteca-sense-tipus';
+```
 
 **DefinitelyTyped** és el repositori col·laboratiu de GitHub amb milers de fitxers `.d.ts` mantinguts per la comunitat. Quan instal·les `@types/nom`, TypeScript el detecta automàticament a `node_modules/@types/`.
 
 **Module Augmentation** — quan vols afegir propietats a tipus existents d'una biblioteca:
 
-| // src/types/express.d.tsdeclare global {  namespace Express {    interface Request {      usuariAutenticat?: Usuari;  // propietat personalitzada a req    }  }} |
-| :---- |
+```typescript
+// src/types/express.d.ts
+declare global {
+  namespace Express {
+    interface Request {
+      usuariAutenticat?: Usuari;  // propietat personalitzada a req
+    }
+  }
+}
+```
 
 **9\. `any` vs `unknown` vs `never`**
 
@@ -102,13 +219,45 @@ Quan una biblioteca JS no inclou fitxers `.d.ts`, TypeScript llança l'error `TS
 | `unknown` | Tipus desconegut però segur: cal comprovar abans d'usar | Quan no saps el tipus però vols seguretat |
 | `never` | Codi que mai s'executa | Exhaustivitat en switch/union, funcions que sempre llancen |
 
-| // unknown: força la comprovaciólet dades: unknown \= obtenirDadesExteriors();// dades.nom;  // ❌ Error: cal comprovar primerif (typeof dades \=== 'string') {  dades.toUpperCase();  // ✅ ara és segur}// never: cas exhaustiu en discriminated unionfunction assertNeverArriba(x: never): never {  throw new Error(\`Cas no gestionat: ${x}\`);} |
-| :---- |
+```typescript
+// unknown: força la comprovació
+let dades: unknown = obtenirDadesExteriors();
+// dades.nom;  // ❌ Error: cal comprovar primer
+if (typeof dades === 'string') {
+  dades.toUpperCase();  // ✅ ara és segur
+}
+
+// never: cas exhaustiu en discriminated union
+function assertNeverArriba(x: never): never {
+  throw new Error(`Cas no gestionat: ${x}`);
+}
+```
 
 **10\. El flux de treball TypeScript en un projecte**
 
-| 1\. Instal·lar i configurar   npm install typescript \--save-dev   npx tsc \--init   Editar tsconfig.json → "strict": true          ↓2\. Escriure codi .ts amb tipus   Definir interfícies per a estructures de dades   Anotar les funcions amb tipus de paràmetres i retorn   Usar genèrics per a components reutilitzables          ↓3\. L'editor detecta errors en temps real   VS Code \+ TypeScript → subratllats vermells mentre escrius   No cal executar res: els errors apareixen al vol          ↓4\. Compilar per a producció   npx tsc          → genera JavaScript a dist/   npx tsc \--watch  → recompila automàticament en cada canvi          ↓5\. Per a frameworks amb bundler (Vite, Next.js):   "noEmit": true   → TypeScript únicament comprova, Vite compila   npx tsc \--noEmit → verificació de tipus sense generar fitxers |
-| :---- |
+```bash
+1. Instal·lar i configurar
+   npm install typescript --save-dev
+   npx tsc --init
+   Editar tsconfig.json → "strict": true
+          ↓
+2. Escriure codi .ts amb tipus
+   Definir interfícies per a estructures de dades
+   Anotar les funcions amb tipus de paràmetres i retorn
+   Usar genèrics per a components reutilitzables
+          ↓
+3. L'editor detecta errors en temps real
+   VS Code + TypeScript → subratllats vermells mentre escrius
+   No cal executar res: els errors apareixen al vol
+          ↓
+4. Compilar per a producció
+   npx tsc          → genera JavaScript a dist/
+   npx tsc --watch  → recompila automàticament en cada canvi
+          ↓
+5. Per a frameworks amb bundler (Vite, Next.js):
+   "noEmit": true   → TypeScript únicament comprova, Vite compila
+   npx tsc --noEmit → verificació de tipus sense generar fitxers
+   ```
 
 **Resum**
 
