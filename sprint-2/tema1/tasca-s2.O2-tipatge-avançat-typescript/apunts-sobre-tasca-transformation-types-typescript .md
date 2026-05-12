@@ -4,27 +4,44 @@
 
 Extreu automàticament el tipus que retorna una funció:
 
-| const myFunc \= () \=\> "hello"type MyFuncReturn \= ReturnType\<typeof myFunc\>// → string |
-| :---- |
+```typescript
+const myFunc = () => "hello"
+
+type MyFuncReturn = ReturnType<typeof myFunc>
+// → string
+```
 
 Per a funcions **async** cal afegir `Awaited` per extreure el tipus de dins la Promise:
 
-| const getUser \= () \=\> Promise.resolve({ id: "123", name: "John" })type ReturnValue \= Awaited\<ReturnType\<typeof getUser\>\>// → { id: string; name: string }// Sense Awaited → Promise\<{ id: string; name: string }\> ❌ |
-| :---- |
+```typescript
+const getUser = () => Promise.resolve({ id: "123", name: "John" })
+
+type ReturnValue = Awaited<ReturnType<typeof getUser>>
+// → { id: string; name: string }
+// Sense Awaited → Promise<{ id: string; name: string }> ❌
+```
 
 **`Parameters` — extreure els paràmetres**
 
 Extreu el tipus dels paràmetres d'una funció com a tupla:
 
-| const makeQuery \= (url: string, opts?: { method?: string }) \=\> {}type MakeQueryParameters \= Parameters\<typeof makeQuery\>// → \[url: string, opts?: { method?: string }\] |
-| :---- |
+```typescript
+const makeQuery = (url: string, opts?: { method?: string }) => {}
+
+type MakeQueryParameters = Parameters<typeof makeQuery>
+// → [url: string, opts?: { method?: string }]
+```
 
 **`keyof` — obtenir les claus d'un objecte**
 
 Extreu les claus d'un objecte com a union type:
 
-| const obj \= { vitest: "...", jest: "...", mocha: "..." }type Keys \= keyof typeof obj// → "vitest" | "jest" | "mocha" |
-| :---- |
+```typescript
+const obj = { vitest: "...", jest: "...", mocha: "..." }
+
+type Keys = keyof typeof obj
+// → "vitest" | "jest" | "mocha"
+```
 
 `keyof` necessita un **tipus** — per això cal `typeof` si tens un valor.
 
@@ -32,8 +49,13 @@ Extreu les claus d'un objecte com a union type:
 
 Permet accedir al tipus d'una propietat concreta:
 
-| const fakeData \= { String: "hola", Int: 1, Boolean: true }type StringType  \= (typeof fakeData)\["String"\]   // → stringtype IntType     \= (typeof fakeData)\["Int"\]       // → numbertype BooleanType \= (typeof fakeData)\["Boolean"\]   // → boolean |
-| :---- |
+```typescript
+const fakeData = { String: "hola", Int: 1, Boolean: true }
+
+type StringType  = (typeof fakeData)["String"]   // → string
+type IntType     = (typeof fakeData)["Int"]       // → number
+type BooleanType = (typeof fakeData)["Boolean"]   // → boolean
+```
 
 Els parèntesis `()` asseguren que `typeof` s'aplica abans de l'accés.
 
@@ -41,15 +63,32 @@ Els parèntesis `()` asseguren que `typeof` s'aplica abans de l'accés.
 
 Sense `as const` TypeScript infereix tipus genèrics. Amb `as const` els valors són **literals exactes**:
 
-| // Sense as constconst obj \= { role: "admin" }// → { role: string }  ← qualsevol string// Amb as constconst obj \= { role: "admin" } as const// → { role: "admin" }  ← exactament "admin" |
-| :---- |
+```typescript
+// Sense as const
+const obj = { role: "admin" }
+// → { role: string }  ← qualsevol string
+
+// Amb as const
+const obj = { role: "admin" } as const
+// → { role: "admin" }  ← exactament "admin"
+```
 
 **Indexed Access amb arrays**
 
 Per obtenir el tipus dels elements d'un array:
 
-| const fruits \= \["apple", "banana", "orange"\] as const// Índex concrettype First \= (typeof fruits)\[0\]        // → "apple"// Múltiples índexstype AppleOrBanana \= (typeof fruits)\[0 | 1\]  // → "apple" | "banana"// Tots els elementstype Fruit \= (typeof fruits)\[number\]   // → "apple" | "banana" | "orange" |
-| :---- |
+```typescript
+const fruits = ["apple", "banana", "orange"] as const
+
+// Índex concret
+type First = (typeof fruits)[0]        // → "apple"
+
+// Múltiples índexs
+type AppleOrBanana = (typeof fruits)[0 | 1]  // → "apple" | "banana"
+
+// Tots els elements
+type Fruit = (typeof fruits)[number]   // → "apple" | "banana" | "orange"
+```
 
 `[number]` significa "qualsevol índex numèric" → retorna tots els elements com a union.
 
@@ -57,8 +96,15 @@ Per obtenir el tipus dels elements d'un array:
 
 Per obtenir tots els **valors** d'un objecte com a union:
 
-| const map \= {  singleModule: "SINGLE\_MODULE",  multiModule: "MULTI\_MODULE",} as consttype Values \= (typeof map)\[keyof typeof map\]// → "SINGLE\_MODULE" | "MULTI\_MODULE" |
-| :---- |
+```typescript
+const map = {
+  singleModule: "SINGLE_MODULE",
+  multiModule: "MULTI_MODULE",
+} as const
+
+type Values = (typeof map)[keyof typeof map]
+// → "SINGLE_MODULE" | "MULTI_MODULE"
+```
 
 Patró: `(typeof obj)[keyof typeof obj]` → tots els valors de l'objecte.
 
@@ -66,37 +112,59 @@ Patró: `(typeof obj)[keyof typeof obj]` → tots els valors de l'objecte.
 
 **Union simple** — valors literals:
 
-| type B \= "a" | "b" | "c" |
-| :---- |
+```typescript
+type B = "a" | "b" | "c"
+```
 
 **Discriminated Union** — objectes amb propietat discriminadora:
 
-| type A \=  | { type: "a"; a: string }  | { type: "b"; b: string }// La propietat 'type' permet distingir cada membre |
-| :---- |
+```typescript
+type A =
+  | { type: "a"; a: string }
+  | { type: "b"; b: string }
+// La propietat 'type' permet distingir cada membre
+```
 
 **Enum** — constants amb nom:
 
-| enum C {  A \= "a",  B \= "b",}C.A  // → "a" |
-| :---- |
+```typescript
+enum C {
+  A = "a",
+  B = "b",
+}
+C.A  // → "a"
+```
 
 **`Extract` i `Exclude` — filtrar unions**
 
 **`Extract`** → **tria** els membres que compleixen la condició:
 
-| type Event \= { type: "click" } | { type: "focus" } | { type: "keydown" }Extract\<Event, { type: "click" }\>// → { type: "click"; event: MouseEvent } |
-| :---- |
+```typescript
+type Event = { type: "click" } | { type: "focus" } | { type: "keydown" }
+
+Extract<Event, { type: "click" }>
+// → { type: "click"; event: MouseEvent }
+```
 
 **`Exclude`** → **elimina** els membres que compleixen la condició:
 
-| Exclude\<Event, { type: "keydown" }\>// → { type: "click" } | { type: "focus" } |
-| :---- |
+```typescript
+Exclude<Event, { type: "keydown" }>
+// → { type: "click" } | { type: "focus" }
+```
 
 **Accedir al discriminador d'una union**
 
 Accedeix a la propietat `type` de tots els membres alhora:
 
-| type Event \=  | { type: "click"; event: MouseEvent }  | { type: "focus"; event: FocusEvent }type EventType \= Event\["type"\]// → "click" | "focus" |
-| :---- |
+```typescript
+type Event =
+  | { type: "click"; event: MouseEvent }
+  | { type: "focus"; event: FocusEvent }
+
+type EventType = Event["type"]
+// → "click" | "focus"
+```
 
 **Resum de patrons**
 
