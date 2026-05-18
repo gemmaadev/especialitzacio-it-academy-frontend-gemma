@@ -16,8 +16,22 @@ La bona notícia: el 96% de les vulnerabilitats conegudes tenen una correcció d
 
 **DAST (Dynamic Application Security Testing)** — ataca l'aplicació en execució des de fora. Caixa negra: simula un atacant extern.
 
-| SAST detecta (sense execució):          DAST detecta (en runtime):  SQL Injection al codi font              Misconfiguracions de servidor  Secrets hardcodats                      Headers HTTP de seguretat absents  XSS en innerHTML                        Vulnerabilitats de sessió  Criptografia feble (MD5, SHA-1)         Race conditions  Imports dinàmics insegurs               Business logic vulnerabilitiesNo detecta:                              No detecta:  Misconfiguracions de servidor           Vulnerabilitats en codi no assolible  Runtime vulnerabilities                 Problemes al codi fontQuan s'usa:                              Quan s'usa:  Cada commit/PR (integrat a l'IDE)        Staging i producció (post-deploy)  Feedback: minuts                         Feedback: hores |
-| :---- |
+```html
+SAST detecta (sense execució):          DAST detecta (en runtime):
+  SQL Injection al codi font              Misconfiguracions de servidor
+  Secrets hardcodats                      Headers HTTP de seguretat absents
+  XSS en innerHTML                        Vulnerabilitats de sessió
+  Criptografia feble (MD5, SHA-1)         Race conditions
+  Imports dinàmics insegurs               Business logic vulnerabilities
+
+No detecta:                              No detecta:
+  Misconfiguracions de servidor           Vulnerabilitats en codi no assolible
+  Runtime vulnerabilities                 Problemes al codi font
+
+Quan s'usa:                              Quan s'usa:
+  Cada commit/PR (integrat a l'IDE)        Staging i producció (post-deploy)
+  Feedback: minuts                         Feedback: hores
+```
 
 La conclusió de la indústria: SAST i DAST no son excloents — cobreixen tipus de vulnerabilitats complementaris en etapes complementàries del SDLC. Calen els dos.
 
@@ -27,13 +41,27 @@ Les dependències transitives son el risc invisible: instal·les 1 paquet, obten
 
 **Les quatre eines principals:**
 
-| \# npm audit \-- integrat, zero configuraciónpm audit              \# detecta vulnerabilitatsnpm audit fix          \# corregeix automàticamentnpm audit \--json       \# sortida per a CI/CD\# OWASP Dependency-Check \-- open source, contra NVD\# Genera informes HTML/XML amb CVEs i puntuació CVSS\# Snyk \-- servei amb BD pròpia, PRs automàtiques\# Dependabot \-- integrat a GitHub, PRs automàtiques |
-| :---- |
+```bash
+# npm audit — integrat, zero configuració
+npm audit              # detecta vulnerabilitats
+npm audit fix          # corregeix automàticament
+npm audit --json       # sortida per a CI/CD
+
+# OWASP Dependency-Check — open source, contra NVD
+# Genera informes HTML/XML amb CVEs i puntuació CVSS
+
+# Snyk — servei amb BD pròpia, PRs automàtiques
+
+# Dependabot — integrat a GitHub, PRs automàtiques
+```
 
 **Integració al CI/CD: bloquejar deploys amb vulnerabilitats crítiques:**
 
-| \# .github/workflows/security.yml\- run: npm audit \--audit-level=high\# Si hi ha vulnerabilitats HIGH o CRITICAL → pipeline falla → no es deploya |
-| :---- |
+```yaml
+# .github/workflows/security.yml
+- run: npm audit --audit-level=high
+# Si hi ha vulnerabilitats HIGH o CRITICAL → pipeline falla → no es deploya
+```
 
 **4\. L'OWASP Top 10:2025 i la detecció automatitzada**
 
@@ -58,23 +86,57 @@ Les vulnerabilitats més fàcils de detectar automàticament: A03, A04, A05, A06
 
 `eslint-plugin-security` és un plugin SAST per a JavaScript/Node.js que detecta 14 categories de vulnerabilitats mentre escrius codi, com l'ESLint normal però per a seguretat.
 
-| npm install \--save-dev eslint-plugin-security |
-| :---- |
+```bash
+npm install --save-dev eslint-plugin-security
+```
 
-| // eslint.config.jsimport security from 'eslint-plugin-security';export default \[security.configs.recommended\]; |
-| :---- |
+```javascript
+// eslint.config.js
+import security from 'eslint-plugin-security';
+export default [security.configs.recommended];
+```
 
 Les regles més crítiques:
 
-| // detect-eval-with-expression → Remote Code Executioneval(userInput);           // ❌ CRITICALconst fn \= new Function(userInput); // ❌ CRITICAL// detect-non-literal-fs-filename → Path Traversalfs.readFile(req.query.file); // ❌ llegeix qualsevol fitxer del sistema// detect-child-process → Command Injectionexec(\`ls \-la ${req.body.dir}\`); // ❌ "dir" pot ser "; rm \-rf /"// detect-unsafe-regex → ReDoS (bloqueig del servidor)const regex \= /^(a+)+$/;  // ❌ backtracking catastròfic// detect-object-injection → Prototype Pollutionobj\[req.body.key\];         // ❌ clau \= "\_\_proto\_\_"// detect-possible-timing-attacks → Timing Attackif (token \== secret) { }   // ❌ usar crypto.timingSafeEqual()// detect-non-literal-require → càrrega arbitrària de mòdulsrequire(userInput);        // ❌ carrega qualsevol fitxer del disc |
-| :---- |
+```javascript
+// detect-eval-with-expression → Remote Code Execution
+eval(userInput);           // ❌ CRITICAL
+const fn = new Function(userInput); // ❌ CRITICAL
+
+// detect-non-literal-fs-filename → Path Traversal
+fs.readFile(req.query.file); // ❌ llegeix qualsevol fitxer del sistema
+
+// detect-child-process → Command Injection
+exec(`ls -la ${req.body.dir}`); // ❌ "dir" pot ser "; rm -rf /"
+
+// detect-unsafe-regex → ReDoS (bloqueig del servidor)
+const regex = /^(a+)+$/;  // ❌ backtracking catastròfic
+
+// detect-object-injection → Prototype Pollution
+obj[req.body.key];         // ❌ clau = "__proto__"
+
+// detect-possible-timing-attacks → Timing Attack
+if (token == secret) { }   // ❌ usar crypto.timingSafeEqual()
+
+// detect-non-literal-require → càrrega arbitrària de mòduls
+require(userInput);        // ❌ carrega qualsevol fitxer del disc
+```
 
 **6\. La complexitat ciclomàtica: la mètrica de qualitat fonamental**
 
 La Complexitat Ciclomàtica (CYC), introduïda per McCabe el 1976, mesura el nombre de camins d'execució independents d'una funció. La fórmula pràctica: **CYC \= nombre de decisions \+ 1** (decisions \= `if`, `else if`, `while`, `for`, `case`, `catch`, `?:`, `&&`, `||` en condicionals).
 
-| function calcularPreu(preu: number, usuari: Usuari, config: Config): number {  if (\!usuari) return 0;              // \+1  if (usuari.premium && preu \> 100) { // \+1 (if) \+ 1 (&&)    return preu \* 0.9;  }  if (config.oferta) return preu \* 0.95; // \+1  return preu;}// Decisions: 4 → CYC \= 4 \+ 1 \= 5 ← acceptable ✅ |
-| :---- |
+```typescript
+function calcularPreu(preu: number, usuari: Usuari, config: Config): number {
+  if (!usuari) return 0;              // +1
+  if (usuari.premium && preu > 100) { // +1 (if) + 1 (&&)
+    return preu * 0.9;
+  }
+  if (config.oferta) return preu * 0.95; // +1
+  return preu;
+}
+// Decisions: 4 → CYC = 4 + 1 = 5 ← acceptable ✅
+```
 
 **La escala de valors (McCabe \+ NIST):**
 
@@ -91,8 +153,24 @@ La connexió directa amb el testing: CYC \= nombre mínim de tests per a cobertu
 
 SonarQube va crear la Complexitat Cognitiva perquè la Ciclomàtica no reflecteix bé la dificultat de llegir el codi. Dues funcions poden tenir la mateixa CYC però una ser molt més difícil d'entendre per l'imbricació.
 
-| // CYC \= 4 en tots dos casos. Cognitiva: molt diferent.// Versió A: cognitiva baixa (fàcil de llegir)const resultat \= a ? 'a' : b ? 'b' : 'c';  // Cognitiva \= 2// Versió B: cognitiva alta (imbricació profunda)function obtenirResultat() {  if (a) {                   // \+1 cogn    return 'a';  } else {                   // \+1 cogn (else)    if (b) {                 // \+2 cogn (nesting \+1)      return 'b';    }    return 'c';  }}  // Cognitiva \= 4 |
-| :---- |
+```typescript
+// CYC = 4 en tots dos casos. Cognitiva: molt diferent.
+
+// Versió A: cognitiva baixa (fàcil de llegir)
+const resultat = a ? 'a' : b ? 'b' : 'c';  // Cognitiva = 2
+
+// Versió B: cognitiva alta (imbricació profunda)
+function obtenirResultat() {
+  if (a) {                   // +1 cogn
+    return 'a';
+  } else {                   // +1 cogn (else)
+    if (b) {                 // +2 cogn (nesting +1)
+      return 'b';
+    }
+    return 'c';
+  }
+}  // Cognitiva = 4
+```
 
 SonarQube emet un code smell quan la Complexitat Cognitiva supera 15-20.
 
@@ -102,8 +180,17 @@ El deute tècnic és el cost del treball addicional causat per escollir una solu
 
 **SonarQube el quantifica en temps real:**
 
-| Technical Debt Ratio \= Cost de remediació / Cost de desenvolupament                     \= Remediació (min) / (0.06 dies × LOC)Graella SQALE (Maintainability Rating):  A \= 0-5%   ✅ Excel·lent  B \= 6-10%  ✅ Bo  C \= 11-20% ⚠️ Moderat  D \= 21-50% 🔴 Alt  E \= 51%+   💀 Crític |
-| :---- |
+```html
+Technical Debt Ratio = Cost de remediació / Cost de desenvolupament
+                     = Remediació (min) / (0.06 dies × LOC)
+
+Graella SQALE (Maintainability Rating):
+  A = 0–5%   ✅ Excel·lent
+  B = 6–10%  ✅ Bo
+  C = 11–20% ⚠️ Moderat
+  D = 21–50% 🔴 Alt
+  E = 51%+   💀 Crític
+```
 
 SonarQube assigna un temps de remediació a cada code smell detectat i suma tot el projecte. El resultat: "El teu projecte té 14h 30min de deute tècnic, Rating B".
 
@@ -115,13 +202,21 @@ SonarQube és la plataforma central que unifica totes les mètriques: seguretat,
 
 **El Quality Gate "Sonar Way" per defecte:**
 
-| Sobre el CODI NOU (no l'existent):  reliability\_rating \<= A    \# 0 nous bugs  security\_rating \<= A       \# 0 noves vulnerabilitats  security\_hotspots\_reviewed \>= 100%  maintainability\_rating \<= A  \# Technical Debt Ratio ≤ 5%  coverage \>= 80%            \# configurable  duplicated\_lines\_density \< 3%  \# configurable |
-| :---- |
+```yaml
+Sobre el CODI NOU (no l'existent):
+  reliability_rating <= A    # 0 nous bugs
+  security_rating <= A       # 0 noves vulnerabilitats
+  security_hotspots_reviewed >= 100%
+  maintainability_rating <= A  # Technical Debt Ratio ≤ 5%
+  coverage >= 80%            # configurable
+  duplicated_lines_density < 3%  # configurable
+```
 
 Si la PR falla el Quality Gate → es bloqueja automàticament al CI/CD.
 
 **10\. El Pipeline complet de seguretat i qualitat**
 
+```html
 Developer escriu codi a l'IDE  
         ↓  
 ESLint Security Plugin detecta vulnerabilitats en temps real  
@@ -151,9 +246,12 @@ Deploy a Producció (únicamente si tot ha passat)
         ↓  
   6\. Monitoratge continu:  
      → Dependabot alerta de nous CVEs  
-     → npm audit periòdic  
+     → npm audit periòdic
+```
+
 **Resum: el mapa complet del tema**
 
+```html
 Seguretat de dependències:  
   → 80% del codi és de tercers  
   → npm audit \+ OWASP Dependency-Check \+ Snyk \+ Dependabot
@@ -181,4 +279,4 @@ SonarQube:
   → Qualificació A-E per Seguretat, Fiabilitat, Mantenibilitat  
   → Quality Gate: bloqueja PRs que no compleixen els estàndards  
   → Filosofia: "Clean as You Code" → focus en el codi nou
-
+```
