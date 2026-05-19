@@ -18,45 +18,133 @@ TypeScript afegeix type safety a les classes: modificadors d'accés, `readonly`,
 
 Restringeix l'accés directe a les dades internes, exposant únicament el que és necessari a través d'una interfície pública controlada.
 
-| class CompteBancari {  private \_saldo: number \= 0;      // privat: no modificable directament  readonly titular: string;        // immutable un cop creat  constructor(titular: string) { this.titular \= titular; }  get saldo(): number { return this.\_saldo; }  // accés controlat de lectura  ingressar(quantitat: number): void {    if (quantitat \<= 0) throw new Error('Quantitat invàlida');    this.\_saldo \+= quantitat;  }}// compte.\_saldo \= \-9999;  // ❌ Error: \_saldo is private |
-| :---- |
+```typescript
+class CompteBancari {
+  private _saldo: number = 0;      // privat: no modificable directament
+  readonly titular: string;        // immutable un cop creat
+
+  constructor(titular: string) { this.titular = titular; }
+
+  get saldo(): number { return this._saldo; }  // accés controlat de lectura
+
+  ingressar(quantitat: number): void {
+    if (quantitat <= 0) throw new Error('Quantitat invàlida');
+    this._saldo += quantitat;
+  }
+}
+// compte._saldo = -9999;  // ❌ Error: _saldo is private
+```
 
 **Modificadors d'accés:** `public` (per defecte, accessible des de qualsevol lloc), `private` (únicament la classe), `protected` (la classe i subclasses), `readonly` (assignable únicament al constructor).
 
 **Parameter Properties** — shorthand que declara i assigna en una sola línia:
 
-| class Producte {  constructor(    private nom: string,     // ← declara i assigna automàticament    readonly preu: number,   // ← idem    protected stock: number  // ← idem  ) {}} |
-| :---- |
+```typescript
+class Producte {
+  constructor(
+    private nom: string,     // ← declara i assigna automàticament
+    readonly preu: number,   // ← idem
+    protected stock: number  // ← idem
+  ) {}
+}
+```
 
 **Herència**
 
 Permet que una classe fill hereti propietats i mètodes d'una classe pare, promovent la reutilització del codi.
 
-| class Animal {  constructor(protected nom: string) {}  moure(dist: number): void { console.log(\`${this.nom} s'ha mogut ${dist}m\`); }}class Gos extends Animal {  constructor(nom: string, private raca: string) {    super(nom);  // ← OBLIGATORI cridar super() primer  }  override moure(dist: number): void {  // 'override' explícit recomanat    console.log('Corrent...');    super.moure(dist);   // ← crida el mètode del pare  }  bordar(): void { console.log(\`${this.nom} diu: Guau\!\`); }} |
-| :---- |
+```typescript
+class Animal {
+  constructor(protected nom: string) {}
+  moure(dist: number): void { console.log(`${this.nom} s'ha mogut ${dist}m`); }
+}
+
+class Gos extends Animal {
+  constructor(nom: string, private raca: string) {
+    super(nom);  // ← OBLIGATORI cridar super() primer
+  }
+
+  override moure(dist: number): void {  // 'override' explícit recomanat
+    console.log('Corrent...');
+    super.moure(dist);   // ← crida el mètode del pare
+  }
+
+  bordar(): void { console.log(`${this.nom} diu: Guau!`); }
+}
+```
 
 **Polimorfisme**
 
 La mateixa interfície, comportaments totalment diferents depenent del tipus concret. Elimina els `switch/if-else` per tipus.
 
-| interface FormaPagament {  processar(quantitat: number): Promise\<boolean\>;  descripcio(): string;}class Targeta implements FormaPagament {  async processar(q: number) { return true; }  descripcio() { return 'Targeta de crèdit'; }}class PayPal implements FormaPagament {  async processar(q: number) { return true; }  descripcio() { return 'PayPal'; }}// La mateixa funció funciona amb qualsevol implementacióasync function cobrar(metode: FormaPagament, total: number) {  await metode.processar(total);  // ← polimorfisme: quin metode? no importa} |
-| :---- |
+```typescript
+interface FormaPagament {
+  processar(quantitat: number): Promise<boolean>;
+  descripcio(): string;
+}
 
+class Targeta implements FormaPagament {
+  async processar(q: number) { return true; }
+  descripcio() { return 'Targeta de crèdit'; }
+}
+
+class PayPal implements FormaPagament {
+  async processar(q: number) { return true; }
+  descripcio() { return 'PayPal'; }
+}
+
+// La mateixa funció funciona amb qualsevol implementació
+async function cobrar(metode: FormaPagament, total: number) {
+  await metode.processar(total);  // ← polimorfisme: quin metode? no importa
+}
+```
 **Abstracció**
 
 Amaga la complexitat interna, exposant únicament la interfície senzilla necessària. En TypeScript: classes abstractes \+ interfícies.
 
-| abstract class NotificacioBase {  // Mètode concret: lògica compartida per totes les subclasses  async notificar(destinatari: string, missatge: string): Promise\<void\> {    console.log(\`\[${new Date().toISOString()}\] Enviant a ${destinatari}...\`);    await this.enviar(destinatari, missatge);  // ← delega al mètode abstracte  }  // Mètode abstracte: cada subclasse defineix el "com"  abstract enviar(destinatari: string, missatge: string): Promise\<void\>;}class NotificacioEmail extends NotificacioBase {  async enviar(dest: string, msg: string): Promise\<void\> {    // lògica SMTP complexa amagada aquí  }}// new NotificacioBase();  // ❌ Cannot create an instance of an abstract class |
-| :---- |
+```typescript
+abstract class NotificacioBase {
+  // Mètode concret: lògica compartida per totes les subclasses
+  async notificar(destinatari: string, missatge: string): Promise<void> {
+    console.log(`[${new Date().toISOString()}] Enviant a ${destinatari}...`);
+    await this.enviar(destinatari, missatge);  // ← delega al mètode abstracte
+  }
+
+  // Mètode abstracte: cada subclasse defineix el "com"
+  abstract enviar(destinatari: string, missatge: string): Promise<void>;
+}
+
+class NotificacioEmail extends NotificacioBase {
+  async enviar(dest: string, msg: string): Promise<void> {
+    // lògica SMTP complexa amagada aquí
+  }
+}
+// new NotificacioBase();  // ❌ Cannot create an instance of an abstract class
+```
 
 **3\. Interfícies vs. Classes abstractes**
 
 Imagina nivells de realitat: interfícies/types \= el menys real (defineix el 'quèés'). Classes abstractes \= punt mig (pot definir part del 'com', però no es pot crear). Classes concretes \= completament real, defineix el 'com'.
 
-| // Interfície: contracte pur, zero JavaScript generat, múltiple implementsinterface Repositori\<T\> {  guardar(entitat: T): Promise\<T\>;  trobarPerId(id: number): Promise\<T | null\>;}// Classe abstracta: contracte \+ implementació parcialabstract class ServeiBase {  protected readonly logger \= new Logger();  abstract processar(): Promise\<void\>;  // les subclasses l'implementen  // Mètode concret: shared entre totes les subclasses  registrar(msg: string): void { this.logger.log(msg); }} |
-| :---- |
+```typescript
+// Interfície: contracte pur, zero JavaScript generat, múltiple implements
+interface Repositori<T> {
+  guardar(entitat: T): Promise<T>;
+  trobarPerId(id: number): Promise<T | null>;
+}
 
-|  | Interfície | Classe Abstracta |
+// Classe abstracta: contracte + implementació parcial
+abstract class ServeiBase {
+  protected readonly logger = new Logger();
+
+  abstract processar(): Promise<void>;  // les subclasses l'implementen
+
+  // Mètode concret: shared entre totes les subclasses
+  registrar(msg: string): void { this.logger.log(msg); }
+}
+```
+
+ |  | Interfície | Classe Abstracta |
 | ----- | ----- | ----- |
 | Implementació | ❌ Cap | ✅ Parcial |
 | Múltiple herència | ✅ `implements A, B, C` | ❌ `extends` únicament una |
@@ -64,6 +152,7 @@ Imagina nivells de realitat: interfícies/types \= el menys real (defineix el 'q
 | Constructor | ❌ | ✅ |
 | Modificadors d'accés | ❌ Tot públic | ✅ `private`, `protected` |
 | Ideal per a | Contractes purs, DIP, APIs | Comportament compartit, Template Method |
+ 
 
 **Regla:** quan necessites un contracte opta per interfície; quan necessites definir comportament comú opta per classe abstracta.
 
@@ -73,36 +162,107 @@ Imagina nivells de realitat: interfícies/types \= el menys real (defineix el 'q
 
 Una classe hauria de tenir una i únicament una raó per canviar.
 
-| // ❌ Una classe fa tres coses → tres raons per canviarclass GestorUsuari {  guardarBD(u: Usuari) { }  enviarEmail(email: string) { }  generarInforme(usuaris: Usuari\[\]) { }}// ✅ Cada classe fa una sola cosaclass RepositoriUsuari { guardar(u: Usuari): Promise\<Usuari\> { } }class NotificadorUsuari { enviarBenvinguda(email: string): Promise\<void\> { } }class InformeUsuaris { generar(usuaris: Usuari\[\]): string { } } |
-| :---- |
+```typescript
+// ❌ Una classe fa tres coses → tres raons per canviar
+class GestorUsuari {
+  guardarBD(u: Usuari) { }
+  enviarEmail(email: string) { }
+  generarInforme(usuaris: Usuari[]) { }
+}
+
+// ✅ Cada classe fa una sola cosa
+class RepositoriUsuari { guardar(u: Usuari): Promise<Usuari> { } }
+class NotificadorUsuari { enviarBenvinguda(email: string): Promise<void> { } }
+class InformeUsuaris { generar(usuaris: Usuari[]): string { } }
+```
 
 **O — Open/Closed Principle**
 
 Obert per a l'extensió, tancat per a la modificació.
 
-| // ❌ Cada nou tipus → modificar el codi existentclass Descompte {  calcular(preu: number, tipus: string) {    if (tipus \=== 'premium') return preu \* 0.9;    if (tipus \=== 'gold') return preu \* 0.8;    // Afegir 'platinum' → modificar aquí → risc regressions  }}// ✅ Nous tipus → noves classes, codi existent intacteinterface EstrategiaDescompte { calcular(preu: number): number; }class DescomptePremium implements EstrategiaDescompte { calcular(p: number) { return p \* 0.9; } }class DescompteGold implements EstrategiaDescompte { calcular(p: number) { return p \* 0.8; } }class DescomptePlatinum implements EstrategiaDescompte { calcular(p: number) { return p \* 0.7; } }// Afegir nous tipus → zero canvis al codi existent |
-| :---- |
+```typescript
+// ❌ Cada nou tipus → modificar el codi existent
+class Descompte {
+  calcular(preu: number, tipus: string) {
+    if (tipus === 'premium') return preu * 0.9;
+    if (tipus === 'gold') return preu * 0.8;
+    // Afegir 'platinum' → modificar aquí → risc regressions
+  }
+}
+
+// ✅ Nous tipus → noves classes, codi existent intacte
+interface EstrategiaDescompte { calcular(preu: number): number; }
+class DescomptePremium implements EstrategiaDescompte { calcular(p: number) { return p * 0.9; } }
+class DescompteGold implements EstrategiaDescompte { calcular(p: number) { return p * 0.8; } }
+class DescomptePlatinum implements EstrategiaDescompte { calcular(p: number) { return p * 0.7; } }
+// Afegir nous tipus → zero canvis al codi existent
+```
 
 **L — Liskov Substitution Principle**
 
 Les subclasses han de poder substituir el tipus base sense trencar el comportament.
 
-| // ❌ LSP violat: Pingui trenca el contracte d'Ocellclass Ocell { volar(): void { } }class Pingui extends Ocell {  volar(): void { throw new Error('No puc volar\!'); }  // ← trenca el contracte}// ✅ LSP respectat: separa les capacitats en interfícies específiquesinterface Volador { volar(): void; }interface Nedador { nedar(): void; }class Aliga implements Volador { volar() { console.log('Volant\!'); } }class Pingui implements Nedador { nedar() { console.log('Nedant\!'); } } |
-| :---- |
+```typescript
+// ❌ LSP violat: Pingui trenca el contracte d'Ocell
+class Ocell { volar(): void { } }
+class Pingui extends Ocell {
+  volar(): void { throw new Error('No puc volar!'); }  // ← trenca el contracte
+}
+
+// ✅ LSP respectat: separa les capacitats en interfícies específiques
+interface Volador { volar(): void; }
+interface Nedador { nedar(): void; }
+class Aliga implements Volador { volar() { console.log('Volant!'); } }
+class Pingui implements Nedador { nedar() { console.log('Nedant!'); } }
+```
 
 **I — Interface Segregation Principle**
 
 Interfícies petites i específiques. Cap client forçat a dependre d'interfícies que no usa.
 
-| // ❌ Interfície "mega": les classes implementen mètodes que no necessiteninterface Treballador {  treballar(): void; menjar(): void; dormir(): void; programar(): void;}// ✅ Interfícies petites i específiquesinterface Treballable { treballar(): void; }interface Programable { programar(): void; }interface Mengeable { menjar(): void; }class HumaDev implements Treballable, Programable, Mengeable {  treballar() { } programar() { } menjar() { }}class Robot implements Treballable, Programable {  treballar() { } programar() { }  // No implementa menjar() → completament correcte} |
-| :---- |
+```typescript
+// ❌ Interfície "mega": les classes implementen mètodes que no necessiten
+interface Treballador {
+  treballar(): void; menjar(): void; dormir(): void; programar(): void;
+}
+
+// ✅ Interfícies petites i específiques
+interface Treballable { treballar(): void; }
+interface Programable { programar(): void; }
+interface Mengeable { menjar(): void; }
+
+class HumaDev implements Treballable, Programable, Mengeable {
+  treballar() { } programar() { } menjar() { }
+}
+class Robot implements Treballable, Programable {
+  treballar() { } programar() { }
+  // No implementa menjar() → completament correcte
+}
+```
 
 **D — Dependency Inversion Principle**
 
 Els mòduls d'alt nivell no han de dependre dels de baix nivell. Tots dos han de dependre d'abstraccions.
 
-| // ❌ DIP violat: ServeiUsuari depèn directament de MySQLclass ServeiUsuari {  private db \= new MySQLDatabase();  // acoblament fort → no testable}// ✅ DIP \+ DI: tots dos depenen de l'abstraccióinterface BaseDeDades { guardar\<T\>(e: T): Promise\<T\>; }class ServeiUsuari {  constructor(private db: BaseDeDades) {}  // ← rep la dependència injectada  async registrar(u: Usuari): Promise\<void\> { await this.db.guardar(u); }}// Producció: implementació realconst servei \= new ServeiUsuari(new MySQLDatabase());// Testing: mock → zero infraestructura realconst serveiTest \= new ServeiUsuari({ guardar: jest.fn() }); |
-| :---- |
+```typescript
+// ❌ DIP violat: ServeiUsuari depèn directament de MySQL
+class ServeiUsuari {
+  private db = new MySQLDatabase();  // acoblament fort → no testable
+}
+
+// ✅ DIP + DI: tots dos depenen de l'abstracció
+interface BaseDeDades { guardar<T>(e: T): Promise<T>; }
+
+class ServeiUsuari {
+  constructor(private db: BaseDeDades) {}  // ← rep la dependència injectada
+  async registrar(u: Usuari): Promise<void> { await this.db.guardar(u); }
+}
+
+// Producció: implementació real
+const servei = new ServeiUsuari(new MySQLDatabase());
+// Testing: mock → zero infraestructura real
+const serveiTest = new ServeiUsuari({ guardar: jest.fn() });
+```
 
 **5\. DIP vs. DI vs. IoC: la distinció de Fowler**
 
@@ -114,8 +274,17 @@ Martin Fowler va nomenar el patró Dependency Injection el 2004 per diferenciar-
 
 Les tres formes de DI: **Constructor Injection** (recomanada: dependències explícites i obligatòries), **Setter Injection** (dependències opcionals, canviables en runtime) i **Interface Injection** (menys comú).
 
-| // Les tres formes de DI// Constructor: les dependències son visibles i obligatòriesclass A { constructor(private dep: InterficieDep) {} }// Setter: opcionalclass B { private dep\!: InterficieDep; setDep(d: InterficieDep) { this.dep \= d; } }// Method: per crida específicaclass C { fer(dep: InterficieDep): void { dep.acció(); } } |
-| :---- |
+```typescript
+// Les tres formes de DI
+// Constructor: les dependències son visibles i obligatòries
+class A { constructor(private dep: InterficieDep) {} }
+
+// Setter: opcional
+class B { private dep!: InterficieDep; setDep(d: InterficieDep) { this.dep = d; } }
+
+// Method: per crida específica
+class C { fer(dep: InterficieDep): void { dep.acció(); } }
+```
 
 **Service Locator** — l'alternativa inferior a DI. La classe cerca activament les dependències. Fowler: la diferència clau és que amb un Service Locator cada usuari d'un servei té una dependència al locator. Amb DI, pots simplement mirar el constructor i veure les dependències.
 
@@ -131,8 +300,20 @@ Les tres formes de DI: **Constructor Injection** (recomanada: dependències expl
 
 **Composició** ("té un") sovint és preferible a l'herència ("és un"). Un cotxe no hereta d'un motor: té un motor. La composició és més flexible i menys fràgil.
 
-| // Herència: fràgil si la jerarquia és profundaclass VehicleEscola extends Cotxe extends Vehicle {}  // ← cadena fràgil// Composició: flexible i desacobladaclass Cotxe {  constructor(    private motor: Motor,   // "té un" Motor    private gps: GPS        // "té un" GPS  ) {}  arrancar() { this.motor.arrancar(); }  navegar(dest: string) { this.gps.navegarA(dest); }} |
-| :---- |
+```typescript
+// Herència: fràgil si la jerarquia és profunda
+class VehicleEscola extends Cotxe extends Vehicle {}  // ← cadena fràgil
+
+// Composició: flexible i desacoblada
+class Cotxe {
+  constructor(
+    private motor: Motor,   // "té un" Motor
+    private gps: GPS        // "té un" GPS
+  ) {}
+  arrancar() { this.motor.arrancar(); }
+  navegar(dest: string) { this.gps.navegarA(dest); }
+}
+```
 
 **8\. Clean Code aplicat a Classes (Robert C. Martin)**
 
@@ -144,6 +325,7 @@ Per gestionar el canvi, s'haurien d'utilitzar interfícies i classes abstractes 
 
 **El mapa del tema**
 
+```html
 POO en TypeScript  
   ├── Classe, Objecte, Instanciació  
   ├── Encapsulació (private, protected, readonly, getters/setters)  
@@ -167,4 +349,5 @@ Principis SOLID
   └── DIP → depèn d'abstraccions \+ DI via constructor
 
 Fowler: IoC → DIP → DI (Constructor | Setter | Method Injection)
+```
 
