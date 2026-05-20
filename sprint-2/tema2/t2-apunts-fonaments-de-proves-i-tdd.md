@@ -13,8 +13,14 @@ El testing automatitzat transforma la manera de desenvolupar. En lloc de descobr
 
 La piràmide de Martin Fowler i Ham Vocke defineix la proporció correcta de cada tipus de test:
 
-|         /E2E\\          ← 10% \-- pocs, lents, molt valor per a l'usuari       /──────\\      / Integr.\\       ← 20% \-- alguns, velocitat mitja     /──────────\\    /  Unitaris  \\     ← 70% \-- molts, ràpids, base de tot   /\_\_\_\_\_\_\_\_\_\_\_\_\_\_\\ |
-| :---- |
+```html
+        /E2E\          ← 10% — pocs, lents, molt valor per a l'usuari
+       /──────\
+      / Integr.\       ← 20% — alguns, velocitat mitja
+     /──────────\
+    /  Unitaris  \     ← 70% — molts, ràpids, base de tot
+   /______________\
+```
 
 L'antipatró és el **con de gelat**: massa tests manuals i E2E a dalt, pocs unitaris a baix. Resulta en una suite lenta, fràgil i cara de mantenir.
 
@@ -22,8 +28,26 @@ L'antipatró és el **con de gelat**: massa tests manuals i E2E a dalt, pocs uni
 
 Un test unitari prova **una sola funció o classe completament aïllada** de les seves dependències. Les dependències externes s'imiten (mock). Resultat: execució en mil·lisegons, determinista, independent.
 
-| // Estructura AAA: Arrange → Act → Assertdescribe('calcularDescompte', () \=\> {  it('quan l\\'usuari és premium, aplica un 10% de descompte', () \=\> {    // Arrange    const preu \= 100;    const usuari \= { premium: true };    // Act    const resultat \= calcularDescompte(preu, usuari);    // Assert    expect(resultat).toBe(90);  });  it('quan l\\'usuari no és premium, no aplica descompte', () \=\> {    expect(calcularDescompte(100, { premium: false })).toBe(100);  });}); |
-| :---- |
+```typescript
+// Estructura AAA: Arrange → Act → Assert
+describe('calcularDescompte', () => {
+  it('quan l\'usuari és premium, aplica un 10% de descompte', () => {
+    // Arrange
+    const preu = 100;
+    const usuari = { premium: true };
+
+    // Act
+    const resultat = calcularDescompte(preu, usuari);
+
+    // Assert
+    expect(resultat).toBe(90);
+  });
+
+  it('quan l\'usuari no és premium, no aplica descompte', () => {
+    expect(calcularDescompte(100, { premium: false })).toBe(100);
+  });
+});
+```
 
 El patró **AAA** (Arrange, Act, Assert) garanteix que el lector entén el test sense esforç mental. Seguir-lo fa que cada test tingui una estructura clara i consistent.
 
@@ -31,8 +55,28 @@ El patró **AAA** (Arrange, Act, Assert) garanteix que el lector entén el test 
 
 Un test d'integració prova la **col·laboració entre múltiples mòduls** amb dependències reals (o quasi-reals): el controlador HTTP \+ el servei \+ la base de dades de test.
 
-| describe('POST /api/usuaris', () \=\> {  it('crea un usuari i el guarda a la base de dades', async () \=\> {    // Arrange: base de dades de test real (no mock)    const db \= await crearBDTest();    const app \= crearApp(db);    // Act    const resposta \= await request(app)      .post('/api/usuaris')      .send({ nom: 'Anna', email: 'anna@e.com' })      .expect(201);    // Assert: comprova la resposta I l'estat de la BD    expect(resposta.body.id).toBeDefined();    const aBD \= await db.usuaris.trobarPerId(resposta.body.id);    expect(aBD?.email).toBe('anna@e.com');    await db.netejar();  });}); |
-| :---- |
+```typescript
+describe('POST /api/usuaris', () => {
+  it('crea un usuari i el guarda a la base de dades', async () => {
+    // Arrange: base de dades de test real (no mock)
+    const db = await crearBDTest();
+    const app = crearApp(db);
+
+    // Act
+    const resposta = await request(app)
+      .post('/api/usuaris')
+      .send({ nom: 'Anna', email: 'anna@e.com' })
+      .expect(201);
+
+    // Assert: comprova la resposta I l'estat de la BD
+    expect(resposta.body.id).toBeDefined();
+    const aBD = await db.usuaris.trobarPerId(resposta.body.id);
+    expect(aBD?.email).toBe('anna@e.com');
+
+    await db.netejar();
+  });
+});
+```
 
 Els tests d'integració capturen problemes que els unitaris no detecten: contractes d'API incorrectes, incompatibilitats d'esquema de base de dades, errors de comunicació entre serveis.
 
@@ -40,8 +84,19 @@ Els tests d'integració capturen problemes que els unitaris no detecten: contrac
 
 Un test E2E simula un usuari real al navegador. Executa l'acció com si fos un humà: visita la pàgina, omple formularis, clica botons, verifica el resultat visual.
 
-| // Playwright: simulació completa al navegadortest('l\\'usuari pot iniciar sessió i veure el dashboard', async ({ page }) \=\> {  await page.goto('/login');  await page.fill('\[name="email"\]', 'anna@exemple.com');  await page.fill('\[name="password"\]', 'contrasenya123');  await page.click('\[data-testid="login-btn"\]');  await expect(page).toHaveURL('/dashboard');  await expect(page.locator('\[data-testid="benvinguda"\]'))    .toContainText('Anna');}); |
-| :---- |
+```typescript
+// Playwright: simulació completa al navegador
+test('l\'usuari pot iniciar sessió i veure el dashboard', async ({ page }) => {
+  await page.goto('/login');
+  await page.fill('[name="email"]', 'anna@exemple.com');
+  await page.fill('[name="password"]', 'contrasenya123');
+  await page.click('[data-testid="login-btn"]');
+
+  await expect(page).toHaveURL('/dashboard');
+  await expect(page.locator('[data-testid="benvinguda"]'))
+    .toContainText('Anna');
+});
+```
 
 Son el nivell amb més valor per a l'usuari però el més lent i fràgil. Usa'ls únicament per als fluxos crítics del negoci (login, checkout, pagament).
 
@@ -51,8 +106,22 @@ El mocking substitueix dependències reals (APIs, bases de dades, emails) per ve
 
 **Les tres eines de Jest/Vitest:**
 
-| // jest.fn(): crear una funció mock des de zeroconst mockEnviarEmail \= jest.fn().mockResolvedValue(undefined);expect(mockEnviarEmail).toHaveBeenCalledWith('anna@e.com', 'Benvinguda\!');expect(mockEnviarEmail).toHaveBeenCalledTimes(1);// jest.mock(): imitar un mòdul completjest.mock('./servei-email', () \=\> ({  enviarEmail: jest.fn().mockResolvedValue(undefined)}));// jest.spyOn(): observar un mètode existent sense substituir-loconst spy \= jest.spyOn(math, 'suma');calcular(2, 3);  // crida la funció REALexpect(spy).toHaveBeenCalledWith(2, 3); |
-| :---- |
+```typescript
+// jest.fn(): crear una funció mock des de zero
+const mockEnviarEmail = jest.fn().mockResolvedValue(undefined);
+expect(mockEnviarEmail).toHaveBeenCalledWith('anna@e.com', 'Benvinguda!');
+expect(mockEnviarEmail).toHaveBeenCalledTimes(1);
+
+// jest.mock(): imitar un mòdul complet
+jest.mock('./servei-email', () => ({
+  enviarEmail: jest.fn().mockResolvedValue(undefined)
+}));
+
+// jest.spyOn(): observar un mètode existent sense substituir-lo
+const spy = jest.spyOn(math, 'suma');
+calcular(2, 3);  // crida la funció REAL
+expect(spy).toHaveBeenCalledWith(2, 3);
+```
 
 **Regla fonamental:** imita únicament el que cal per aïllar la unitat. Pregunta't: "Uso el mock per testar funcionalitat que apareix als requisits?" Si no, és testing de detalls d'implementació, no de comportament.
 
@@ -66,8 +135,26 @@ Kent Beck va sintetitzar el TDD en dues regles: escriu codi nou únicament si un
 * **Verd** — escriu el **mínim codi** per fer passar el test. Pots retornar una constant hardcodada. L'objectiu és tenir la barra verda, no codi perfecte.  
 * **Refactor** — millora el codi sense canviar el comportament. Els tests han de seguir passant. Aquí és on el codi passa de "funciona" a "funciona bé".
 
-| // ITERACIÓ 1// Vermell: test que fallait('suma dos nombres', () \=\> { expect(suma(2, 3)).toBe(5); });// ❌ suma no existeix// Verd: mínim codiconst suma \= (a: number, b: number) \=\> 5;  // hardcode acceptable\!// ✅ test passa// Iteració 2: nou test força la generalitzacióit('suma 10 i 20', () \=\> { expect(suma(10, 20)).toBe(30); });// ❌ 5 \!== 30 → cal implementar la suma real// Verd real:const suma \= (a: number, b: number): number \=\> a \+ b;// ✅ tots els tests passen// Refactor: extraiem el tipus si cal, millorem noms |
-| :---- |
+```typescript
+// ITERACIÓ 1
+// Vermell: test que falla
+it('suma dos nombres', () => { expect(suma(2, 3)).toBe(5); });
+// ❌ suma no existeix
+
+// Verd: mínim codi
+const suma = (a: number, b: number) => 5;  // hardcode acceptable!
+// ✅ test passa
+
+// Iteració 2: nou test força la generalització
+it('suma 10 i 20', () => { expect(suma(10, 20)).toBe(30); });
+// ❌ 5 !== 30 → cal implementar la suma real
+
+// Verd real:
+const suma = (a: number, b: number): number => a + b;
+// ✅ tots els tests passen
+
+// Refactor: extraiem el tipus si cal, millorem noms
+```
 
 **Errors comuns:** escriure múltiples tests alhora (un a la vegada), saltar el vermell (confirma que el test és vàlid), saltar el refactor (es crea deute tècnic).
 
@@ -77,24 +164,46 @@ La decisió prèvia: projecte **Vite** → **Vitest** (natiu, zero config). Proj
 
 **Jest amb TypeScript:**
 
-| npm install \--save-dev jest typescript ts-jest @types/jest |
-| :---- |
+```bash
+npm install --save-dev jest typescript ts-jest @types/jest
+```
 
-| // jest.config.tsexport default {  preset: 'ts-jest',  testEnvironment: 'node',  // o 'jsdom' per a frontend  collectCoverageFrom: \['src/\*\*/\*.ts', '\!src/\*\*/\*.d.ts'\],}; |
-| :---- |
-
+```typescript
+// jest.config.ts
+export default {
+  preset: 'ts-jest',
+  testEnvironment: 'node',  // o 'jsdom' per a frontend
+  collectCoverageFrom: ['src/**/*.ts', '!src/**/*.d.ts'],
+};
+```
 **Vitest (projecte Vite existent):**
 
-| npm install \--save-dev vitest @vitest/coverage-v8 |
-| :---- |
+```bash
+npm install --save-dev vitest @vitest/coverage-v8
+```
 
-| // vite.config.ts \-- afegir la secció test/// \<reference types="vitest" /\>export default defineConfig({  test: {    globals: true,    environment: 'jsdom',    coverage: { provider: 'v8', reporter: \['text', 'html', 'lcov'\] },  },}); |
-| :---- |
+```typescript
+// vite.config.ts — afegir la secció test
+/// <reference types="vitest" />
+export default defineConfig({
+  test: {
+    globals: true,
+    environment: 'jsdom',
+    coverage: { provider: 'v8', reporter: ['text', 'html', 'lcov'] },
+  },
+});
+```
 
 **Scripts essencials:**
 
-| {  "test": "vitest",  "test:run": "vitest run",  "test:coverage": "vitest run \--coverage",  "test:ui": "vitest \--ui"} |
-| :---- |
+```json
+{
+  "test": "vitest",
+  "test:run": "vitest run",
+  "test:coverage": "vitest run --coverage",
+  "test:ui": "vitest --ui"
+}
+```
 
 **9\. Cobertura de codi (Code Coverage)**
 
@@ -111,8 +220,11 @@ La cobertura mesura quin percentatge del codi executen els tests. No garanteix q
 
 **Generar l'informe:**
 
-| npm run test:coverage\# → genera coverage/index.html (obert al navegador)\# → genera coverage/lcov.info (per a VS Code Coverage Gutters) |
-| :---- |
+```bash
+npm run test:coverage
+# → genera coverage/index.html (obert al navegador)
+# → genera coverage/lcov.info (per a VS Code Coverage Gutters)
+```
 
 L'informe HTML mostra línies en verd (cobertes), roig (no cobertes) i groc (branca parcialment coberta). El CI/CD pot bloquejar PRs si la cobertura baixa d'un llindar configurat.
 
@@ -122,8 +234,16 @@ Una regressió és quan un canvi nou trenca alguna cosa que funcionava. Les prov
 
 La regla: **cada bug arreglat ha de tenir un test que el reprodueixi, escrit ABANS d'arreglar el bug**.
 
-| // 1\. Bug reportat: "el carret duplica el preu amb descompte"// 2\. Escriu el test que reprodueix el bug (VERMELL)it('NO duplica el preu quan hi ha descompte', () \=\> {  const preu \= calcularTotal({ preu: 100, descompte: 10 });  expect(preu).toBe(90);  // ← falla perquè el bug existeix});// 3\. Arregla el bug fins que el test passa (VERD)// 4\. El test queda per sempre → la regressió és impossible |
-| :---- |
+```typescript
+// 1. Bug reportat: "el carret duplica el preu amb descompte"
+// 2. Escriu el test que reprodueix el bug (VERMELL)
+it('NO duplica el preu quan hi ha descompte', () => {
+  const preu = calcularTotal({ preu: 100, descompte: 10 });
+  expect(preu).toBe(90);  // ← falla perquè el bug existeix
+});
+// 3. Arregla el bug fins que el test passa (VERD)
+// 4. El test queda per sempre → la regressió és impossible
+```
 
 En el pipeline CI/CD, tots els tests s'executen en cada PR. Si algun falla, la PR no es pot fusionar. Si torna el bug, el test falla immediatament.
 
@@ -137,6 +257,7 @@ En el pipeline CI/CD, tots els tests s'executen en cada PR. Si algun falla, la P
 
 **El mapa del tema**
 
+```html
 Per quètesting?  
   → Detecció primerenca · Confiança · Documentació viva · Millor disseny
 
@@ -154,4 +275,4 @@ Les eines
 La qualitat  
   → Patró AAA · Noms descriptius · Tests independents  
   → Code Coverage (80%+ statements) · Proves de regressió al CI/CD
-
+```
