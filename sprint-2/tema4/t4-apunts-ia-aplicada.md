@@ -8,8 +8,13 @@ Els **LLM (Large Language Models)** son models de xarxa neuronal basats en l'arq
 
 **El Transfer Learning** permet que un model pre-entrenat en dades massives (GitHub, Stack Overflow, documentació) s'especialitzi per a tasques concretes (generació de codi, detecció de bugs) amb menys dades i cost. La cadena és:
 
-| Pre-entrenament (massiu, general)     ↓ Fine-tuning (específic per tasca)     ↓ RLHF (feedback humà per millorar utilitat)     ↓ Instruction Tuning (aprendre a seguir instruccions)Model final (GitHub Copilot, Claude Code, etc.) |
-| :---- |
+```html
+Pre-entrenament (massiu, general)
+     ↓ Fine-tuning (específic per tasca)
+     ↓ RLHF (feedback humà per millorar utilitat)
+     ↓ Instruction Tuning (aprendre a seguir instruccions)
+Model final (GitHub Copilot, Claude Code, etc.)
+```
 
 **Les limitacions fonamentals:** el model prediu el token estadísticament més probable, no el lògicament correcte. Per això genera code hallucinations: codi que sembla correcte però falla en execució.
 
@@ -33,8 +38,13 @@ El **Prompt Engineering** és la disciplina de dissenyar els inputs als models d
 
 Les regles pràctiques per a codi:
 
-| ESPECIFICA → el context tècnic (TypeScript strict, Node 20, Vite)DESCRIU    → inputs i outputs exactes amb tipusRESTRINGEIX → "sense dependències externes", "O(n) màxim"FORMAT     → "amb JSDoc, tests Jest i explicació de les decisions"VALIDA     → "Explica els edge cases que no gestiones" |
-| :---- |
+```html
+ESPECIFICA → el context tècnic (TypeScript strict, Node 20, Vite)
+DESCRIU    → inputs i outputs exactes amb tipus
+RESTRINGEIX → "sense dependències externes", "O(n) màxim"
+FORMAT     → "amb JSDoc, tests Jest i explicació de les decisions"
+VALIDA     → "Explica els edge cases que no gestiones"
+```
 
 **4\. Hallucinations: detectar errors del codi generat per IA**
 
@@ -46,8 +56,19 @@ Una **hallucination** en el context del codi és un error semàntic profund que 
 
 **Errors de Lògica Silenciosos** — el codi compila, s'executa i fins i tot retorna dades, però fa una cosa diferent de la desitjada. `!p.actiu` en lloc de `p.actiu`, ordre de sort invertit, condicions mal formulades.
 
-| El protocol de detecció:Compilació TypeScript → errors de tipus immediats          ↓Linting ESLint → patrons problemàtics          ↓Verificació manual d'APIs → documentació oficial          ↓Tests unitaris específics → cobreix l'edge case          ↓Verificació de paquets → npm info \+ downloads          ↓Code Review humà → lògica de negoci |
-| :---- |
+```html
+Compilació TypeScript → errors de tipus immediats
+          ↓
+Linting ESLint → patrons problemàtics
+          ↓
+Verificació manual d'APIs → documentació oficial
+          ↓
+Tests unitaris específics → cobreix l'edge case
+          ↓
+Verificació de paquets → npm info + downloads
+          ↓
+Code Review humà → lògica de negoci
+```
 
 **5\. Les eines d'IA als IDEs**
 
@@ -72,8 +93,11 @@ L'OWASP ha publicat una llista específica dels deu riscos de seguretat més cr�
 
 El 2026 marca una inflexió: el 92% dels developers dels EUA usen eines d'IA diàriament. L'evolució ha estat:
 
-| 2021-2023: Completions → suggereix la línia següent2023-2024: Chat \+ Edició → descrius, l'IA implementa2025-2026: Agèntic → l'IA planifica, executa i s'autocorregeix |
-| :---- |
+```html
+2021-2023: Completions → suggereix la línia següent
+2023-2024: Chat + Edició → descrius, l'IA implementa
+2025-2026: Agèntic → l'IA planifica, executa i s'autocorregeix
+```
 
 El **Vibe Coding** — on la IA genera, suggereix i refactoritza en temps real — ha emergit com a paradigma dominant. La tendència és cap a equips multi-agent: un agent planificador descompon la tasca, agents especialitzats implementen el backend, el frontend i els tests, i un agent de revisió comprova la seguretat.
 
@@ -83,6 +107,7 @@ Les habilitats que guanyen importància: pensament sistèmic, prompt engineering
 
 **Esquema del tema** 
 
+```html
 Com funciona?  
   → Transformers \+ Self-Attention \+ Tokens  
   → Pre-entrenament \+ Fine-tuning \+ Transfer Learning  
@@ -112,4 +137,4 @@ Seguretat OWASP
 Futur  
   → De l'autocompletat a l'agèntic  
   → Developer \= Orquestrador \+ Arquitecte \+ Responsable ètic
-
+```
