@@ -408,6 +408,8 @@ await getAlumnis((error) => renderError(error, "alumni-error"));
 Renderitzar significa **convertir dades en HTML visible**. Cada secció de la pàgina té la seva pròpia funció de renderitzat.
 
 ```typescript
+// src/logic/networking.ts/
+
 // Variable global que guarda els alumnes per poder filtrar-los
 let allAlumnis: Alumni[] = [];
 
@@ -478,6 +480,8 @@ A l'HTML preparem els elements per a cada estat (tots amagats per defecte amb `h
 I TypeScript els mostra/amaga segons el moment:
 
 ```typescript
+// src/logic/networking.ts/
+
 const getAllAlumnisAndRender = async () => {
   const loadingEl = document.getElementById("alumni-loading");
   const section = document.querySelector('[aria-labelledby="alumni-heading"]');
@@ -509,6 +513,8 @@ const getAllAlumnisAndRender = async () => {
 En lloc de tenir una funció d'error diferent per a cada secció, fem una sola funció que accepta l'id de l'element on mostrar l'error:
 
 ```typescript
+// src/logic/global.ts/
+
 export function renderError(
   error: Error | unknown,
   elementId: string = "alumni-error"  // valor per defecte
@@ -531,6 +537,8 @@ renderError(error, "jobs-error");      // error de feines
 Cada pàgina té una funció `setup` que s'executa quan el router navega a aquella pàgina. Orquestra tot el que ha de passar:
 
 ```typescript
+// src/logic/networking.ts/
+
 export async function setupNetworkingPage(): Promise<void> {
   setupHeader("networking");         // configura el header
   setupFooter("networking");         // configura el footer
@@ -552,14 +560,27 @@ Quan fem el fetch, les dades arriben una sola vegada. Si cada vegada que l'usuar
 La solució: **guardem les dades un cop i filtrem localment**.
 
 ```typescript
+// src/logic/networking.ts
+
 let allAlumnis: Alumni[] = []; // array global, accessible per totes les funcions
 
-// Quan arriben les dades, les guardem
-const alumnis = await getAlumnis(...);
-allAlumnis = alumnis; // ← guardem a la "nevera"
+// Quan arriben les dades de l'API, les guardem a la "nevera"
+const getAllAlumnisAndRender = async () => {
+  const alumnis = await getAlumnis(...);
+  allAlumnis = alumnis; // ← guardem a la "nevera"
+  renderAlumni(alumnis);
+};
 
-// Quan l'usuari filtra, busquem a la "nevera" — no a l'API
-const filtered = filterAlumnis(query, allAlumnis);
+// Quan l'usuari escriu, busquem a la "nevera" — no tornem a cridar l'API
+function setupSearch(): void {
+  const input = document.getElementById("alumni-search") as HTMLInputElement;
+  if (!input) return;
+
+  input.addEventListener("input", () => {
+    const filteredAlumnis = filterAlumnis(input.value, allAlumnis); // ← busca a la "nevera"
+    renderAlumni(filteredAlumnis);
+  });
+}
 ```
 
 ### La funció de filtratge (funció pura)
@@ -572,43 +593,71 @@ Una **funció pura** és aquella que:
 Això la fa fàcil de testejar.
 
 ```typescript
-export function filterAlumnis(query: string, alumnis: Alumni[]): Alumni[] {
-  // Si no hi ha query, retorna tots
-  if (!query.trim()) return alumnis;
+// src/logic/networking.ts
 
-  return alumnis.filter((alumni) =>
-    // Concatenem tots els camps cercables en un string
-    `${alumni.firstName} ${alumni.lastName} ${alumni.position} ${alumni.location}`
-      .toLowerCase()           // convertim a minúscules per no distingir majúscules
-      .includes(query.toLowerCase()) // comprovem si conté la query
+export function filterAlumnis(query: string, alumnis: Alumni[]): Alumni[] {
+  const searchTerm = query.toLowerCase().trim();
+//  // .toLowerCase() → "CEO" i "ceo" són el mateix | .trim() → elimina espais
+  if (!searchTerm) return alumnis;
+//Quan l'usuari esborra el text, tornen a aparèixer tots els alumnes.
+
+  return alumnis.filter(
+    ({ firstName, lastName, position, location, company, classOf }) => {
+// extreu els camps directament. És més net i llegible.
+      const fullName = `${firstName} ${lastName}`.toLowerCase();
+//Per poder buscar "John Doe" com a paraula completa.
+      return (
+        fullName.includes(searchTerm) || // busca al nom complet
+        firstName.toLowerCase().includes(searchTerm) || // busca al nom
+        lastName.toLowerCase().includes(searchTerm) || // busca al cognom
+        position.toLowerCase().includes(searchTerm) || //etc. 
+        location.toLowerCase().includes(searchTerm) ||
+        company.toLowerCase().includes(searchTerm) ||
+        classOf.toString().includes(searchTerm)
+      );
+    },
   );
 }
 ```
 
-**Per exemple:**
-- Query: `"john"` → busca en `"john doe ceo san francisco"` → ✅ troba
-- Query: `"ceo"` → busca en `"sarah smith marketing director new york"` → ❌ no troba
-
 ### Filtres combinats (múltiples filtres alhora)
 
-Per a la borsa de treball, tenim tres filtres que s'apliquen simultàniament:
+Per a la borsa de treball, tenim tres filtres que s'apliquen simultàniament. En lloc de passar-los com a paràmetres separats, s'agrupen en una interfície `JobFilters` — més net i escalable:
 
 ```typescript
-function filterJobs(query: string, industry: string, experience: string): Job[] {
-  return allJobs.filter((job) => {
-    // Cada condició és independent
-    const matchesQuery = `${job.title} ${job.company}`
-      .toLowerCase()
-      .includes(query.toLowerCase());
+// src/logic/filterJobs.ts
 
-    // Si industry és "" (All), passa sempre
-    const matchesIndustry = industry === "" || job.industry === industry;
+// Interfície que agrupa els tres filtres en un sol objecte — més net i escalable
+export interface JobFilters {
+  search: string;
+  industry: string;
+  experienceLevel: string;
+}
 
-    // Si experience és "" (All), passa sempre
-    const matchesExperience = experience === "" || job.experienceLevel === experience;
+export function filterJobs(jobs: Job[], filters: JobFilters): Job[] {
+  // Normalitzem tots els filtres — minúscules i sense espais
+  const searchTerm = filters.search.toLowerCase().trim();
+  const industry = filters.industry.toLowerCase().trim();
+  const experienceLevel = filters.experienceLevel.toLowerCase().trim();
+
+  return jobs.filter((job) => {
+    // Si searchTerm és buit (!searchTerm), passa sempre — sinó comprova camp per camp
+    const matchesSearch =
+      !searchTerm ||
+      job.title.toLowerCase().includes(searchTerm) ||
+      job.company.toLowerCase().includes(searchTerm) ||
+      job.location.toLowerCase().includes(searchTerm) ||
+      job.type.toLowerCase().includes(searchTerm);
+
+    // Igualtat exacta amb === perquè "Technology" ha de ser exactament "Technology"
+    const matchesIndustry =
+      !industry || job.industry.toLowerCase() === industry;
+
+    const matchesExperience =
+      !experienceLevel || job.experienceLevel.toLowerCase() === experienceLevel;
 
     // Ha de complir les TRES condicions alhora
-    return matchesQuery && matchesIndustry && matchesExperience;
+    return matchesSearch && matchesIndustry && matchesExperience;
   });
 }
 ```
@@ -616,36 +665,47 @@ function filterJobs(query: string, industry: string, experience: string): Job[] 
 ### Escoltar canvis en temps real
 
 ```typescript
+// src/logic/networking.ts
+
 function setupSearch(): void {
   const input = document.getElementById("alumni-search") as HTMLInputElement;
   if (!input) return;
 
   // "input" s'activa cada vegada que l'usuari escriu una lletra
   input.addEventListener("input", () => {
-    const filtered = filterAlumnis(input.value, allAlumnis);
-    renderAlumni(filtered); // re-renderitza amb els resultats filtrats
+    const query = input.value;
+    const filteredAlumnis = filterAlumnis(query, allAlumnis);
+    renderAlumni(filteredAlumnis); // re-renderitza amb els resultats filtrats
   });
 }
 
-function setupFilters(): void {
-  const industrySelect = document.getElementById("industry-filter") as HTMLSelectElement;
-  const experienceSelect = document.getElementById("experience-filter") as HTMLSelectElement;
-  const searchInput = document.getElementById("jobs-search") as HTMLInputElement;
+// src/logic/job-opportunities.ts
 
+function setupFilters(): void {
+  const input = document.getElementById("jobs-search") as HTMLInputElement;
+  const industrySelect = document.getElementById(
+    "industry-filter",
+  ) as HTMLSelectElement;
+  const experienceSelect = document.getElementById(
+    "experience-filter",
+  ) as HTMLSelectElement;
+
+  // Funció que aplica els tres filtres alhora cada vegada que qualsevol canvia
   const applyFilters = () => {
-    const filtered = filterJobs(
-      searchInput?.value || "",
-      industrySelect?.value || "",
-      experienceSelect?.value || ""
-    );
+    const filtered = filterJobs(allJobs, {
+      search: input?.value ?? "",
+      industry: industrySelect?.value ?? "",  // ?? retorna "" si el valor és null o undefined
+      experienceLevel: experienceSelect?.value ?? "",
+    });
     renderJobs(filtered);
   };
 
-  // Escoltem canvis a tots tres elements
-  searchInput?.addEventListener("input", applyFilters);
+  // "input" → s'activa cada lletra | "change" → s'activa quan canvies l'opció del selector
+  input?.addEventListener("input", applyFilters);
   industrySelect?.addEventListener("change", applyFilters);
   experienceSelect?.addEventListener("change", applyFilters);
 }
+
 ```
 
 ---
@@ -936,70 +996,192 @@ En lloc de repetir estils, creem classes globals reutilitzables:
 
 **SPA (Single Page Application):** el navegador carrega una sola vegada. La navegació és gestionada per JavaScript — només canvia el contingut del `#app`, no tota la pàgina.
 
+---
+
 ### Com funciona el nostre router
 
 ```
 1. L'usuari clica <a href="/networking">
-2. El router intercepta el click (event.preventDefault())
-3. Actualitza la URL sense recarregar (history.pushState)
-4. Fa fetch del fitxer networking.html
-5. Injecta el HTML al #app
-6. Executa setupNetworkingPage()
-7. L'usuari veu la pàgina de networking
+2. initRouter detecta el click
+3. event.preventDefault() → evita la recàrrega
+4. navigate("/networking") s'executa
+5. findRoute("/networking") → troba la ruta al array ROUTES
+6. pushState → URL canvia a /networking sense recarregar
+7. cleanupPreviousStyles() → elimina el CSS de la pàgina anterior
+8. loadPageStyles() → carrega networking.css
+9. fetch("/src/pages/networking.html") → obté el HTML
+10. appContainer.innerHTML = html → injecta al #app
+11. setupNetworkingPage() → carrega dades i renderitza
+12. setupHeader("networking") → actualitza el header
+13. setupBottomNav("networking") → marca "Networking" com actiu
 ```
 
-### Flux en codi
+---
+
+### El "mapa" de rutes
+
+Cada ruta defineix què carregar quan l'usuari navega a una URL:
 
 ```typescript
-// router.ts
+//router.ts
 
-// 1. Interceptar clicks als links
-document.addEventListener("click", (event) => {
-  const link = (event.target as HTMLElement).closest("a");
-  if (!link) return;
+const ROUTES: Route[] = [
+  {
+    path: "/networking",                  // URL que l'usuari veu
+    file: "/src/pages/networking.html",   // fitxer HTML a carregar
+    css: ["/src/styles/networking.css"],  // CSS específic de la pàgina
+    script: "networking",                 // clau per executar el setup
+  },
+];
+```
 
-  const href = link.getAttribute("href");
-  if (!href || href.startsWith("http") || href.startsWith("#")) return;
+---
 
-  event.preventDefault(); // evita la recàrrega
-  navigate(href);          // navegació SPA
-});
+### Gestió de CSS per pàgina
 
-// 2. Navegar a una ruta
-async function navigate(path: string): Promise<void> {
-  const route = findRoute(path);
+Cada pàgina té el seu propi CSS. Quan es navega, el router elimina el CSS anterior i carrega el nou:
 
-  // Actualitza la URL
-  window.history.pushState({}, "", path);
+```typescript
+//router.ts
 
-  // Carrega el HTML
-  await loadPage(route.file, route);
+// Elimina el CSS de la pàgina anterior
+function cleanupPreviousStyles(): void {
+  const pageStyles = document.querySelectorAll("link[data-page-style]");
+  pageStyles.forEach((link) => link.remove());
 }
 
-// 3. Carregar el HTML i executar el setup
-async function loadPage(filePath: string, route: Route): Promise<void> {
-  const response = await fetch(filePath);
-  const html = await response.text();
+// Carrega el CSS de la nova pàgina
+function loadPageStyles(cssFiles?: string[]): void {
+  cssFiles?.forEach((cssFile) => {
+    const exists = document.querySelector(`link[href="${cssFile}"]`);
+    if (exists) return; // no carregues si ja existeix
 
-  document.getElementById("app")!.innerHTML = html;
-
-  // Executa el setup de la pàgina
-  if (route.script && window.pageSetups[route.script]) {
-    window.pageSetups[route.script]();
-  }
-
-  // Actualitza el header i bottom-nav
-  setupHeader(route.script || "");
-  setupBottomNav(route.script || "");
+    const link = document.createElement("link");
+    link.rel = "stylesheet";
+    link.href = cssFile;
+    link.setAttribute("data-page-style", "true"); // marca per eliminar després
+    document.head.appendChild(link);
+  });
 }
 ```
 
-### window.pageSetups
+---
 
-Un objecte global que registra les funcions de setup de cada pàgina:
+### `navigate` — navegar a una ruta
+
+```typescript
+//router.ts
+
+export async function navigate(path: string, replace: boolean = false): Promise<void> {
+  const route = findRoute(path);
+
+  // Si no existeix la ruta → mostra 404
+  if (!route) { ... return; }
+
+  // Si té redirect → navega al redirect
+  if (route.redirect) {
+    navigate(route.redirect, replace);
+    return;
+  }
+
+  // Actualitza la URL sense recarregar la pàgina
+  if (replace) {
+    window.history.replaceState({}, "", path); // substitueix l'entrada actual (no afegeix al historial)
+  } else {
+    window.history.pushState({}, "", path);    // afegeix una nova entrada al historial
+  }
+
+  await loadPage(route.file, route);
+}
+```
+
+**`replace` vs `pushState`:**
+- `pushState` → com quan cliques un link. Pots anar enrere amb el botó ←
+- `replaceState` → substitueix sense afegir al historial. S'usa a la càrrega inicial
+
+---
+
+### `loadPage` — carregar el HTML i executar el setup
+
+```typescript
+//router.ts
+
+async function loadPage(filePath: string, route: Route): Promise<void> {
+  const appContainer = document.getElementById("app");
+
+  cleanupPreviousStyles();   // elimina CSS anterior
+  loadPageStyles(route.css); // carrega CSS nou
+
+  const response = await fetch(filePath);
+
+  // Si falla → mostra error 404
+  if (!response.ok) {
+    appContainer.innerHTML = `<h2>Error 404</h2>`;
+    return;
+  }
+
+  const html = await response.text();
+
+  // Extreu només el contingut del <body> si n'hi ha
+  const bodyMatch = html.match(/<body[^>]*>([\s\S]*)<\/body>/i);
+  const content = bodyMatch ? bodyMatch[1] : html;
+
+  // Injecta el HTML al #app
+  appContainer.innerHTML = content;
+
+  // Executa el setup i actualitza header i bottom-nav
+  if (route.script && window.pageSetups?.[route.script]) {
+    window.pageSetups[route.script]();
+    setupHeader(route.script || "");
+    setupBottomNav(route.script || "");
+  }
+}
+```
+
+---
+
+### `initRouter` — inicialitza 3 events
+
+```typescript
+//router.ts
+
+export function initRouter(): void {
+  // Event 1: botó enrere/endavant del navegador
+  window.addEventListener("popstate", () => {
+    navigate(getCurrentPath(), true);
+  });
+
+  // Event 2: intercepta TOTS els clicks als links de la pàgina
+  document.addEventListener("click", (event) => {
+    const link = (event.target as HTMLElement).closest("a");
+    if (!link) return;
+
+    const href = link.getAttribute("href");
+
+    // No intercepta links externs, ancores (#) o downloads
+    if (href.startsWith("http") || href.startsWith("#") ||
+        link.hasAttribute("target") || link.hasAttribute("download")) {
+      return; // deixa que el navegador ho gestioni normalment
+    }
+
+    event.preventDefault(); // evita la recàrrega
+    navigate(href);          // navegació SPA
+  });
+
+  // Event 3: carrega la pàgina inicial
+  navigate(getCurrentPath(), true);
+}
+```
+
+---
+
+### `window.pageSetups` — registre de setups
+
+Un objecte global que associa cada ruta amb la seva funció de setup:
 
 ```typescript
 // main.ts
+
 window.pageSetups = {
   home: setupHomePage,
   networking: setupNetworkingPage,
@@ -1009,13 +1191,15 @@ window.pageSetups = {
 };
 ```
 
-Quan el router navega a `/networking`, busca `window.pageSetups["networking"]` i l'executa.
+Quan el router navega a `/networking`, busca `window.pageSetups["networking"]` i l'executa automàticament.
 
 ### Redirecció per device
 
 A la pantalla inicial, redirigim segons si és mòbil o desktop:
 
 ```typescript
+// main.ts
+
 const isMobile = window.innerWidth < 768;
 
 if (window.location.pathname === "/") {
