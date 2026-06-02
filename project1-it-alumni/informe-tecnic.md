@@ -1,4 +1,6 @@
-# 📋 Informe Tècnic — IT Academy Alumni Platform
+# Informe Tècnic — IT Academy Alumni Platform
+Consultar projecte a > https://github.com/gemmaadev/it-academy-alumni-platform
+
 ### Decisions i aprenentatges clau del projecte
 
 ---
@@ -1020,26 +1022,6 @@ if (window.location.pathname === "/") {
   window.location.replace(isMobile ? "/splash-page" : "/home");
 }
 ```
-
----
-
-## RESUM DE CONCEPTES CLAU
-
-| Concepte | Què és | Per a qué serveix |
-|----------|--------|-------------------|
-| `async/await` | Sintaxi per esperar promeses | Fer crides a API sense bloquejar |
-| `fetch()` | Funció nativa del navegador | Fer peticions HTTP |
-| `Promise<T>` | Valor que arribarà en el futur | Tipar funcions asíncrones |
-| `innerHTML` | Propietat del DOM | Injectar HTML dinàmicament |
-| `.map()` | Mètode d'array | Transformar cada element |
-| `.filter()` | Mètode d'array | Filtrar elements per condició |
-| `.join("")` | Mètode d'array | Unir strings |
-| `getElementById` | Mètode del DOM | Buscar element per id |
-| `addEventListener` | Mètode del DOM | Escoltar events |
-| `hidden` | Atribut HTML | Amagar element |
-| `aria-busy` | Atribut ARIA | Indicar que s'estan carregant dades |
-| `interface` | TypeScript | Definir l'estructura d'un objecte |
-| `export/import` | ES Modules | Compartir codi entre fitxers |
 
 ---
 
