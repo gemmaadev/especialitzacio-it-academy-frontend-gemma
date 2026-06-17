@@ -1,0 +1,11 @@
+- [ ] Puc explicar les diferències entre Fetch i Axios i quan utilitzar cadascuna.  
+- [ ] Sé configurar encapçalaments (headers) com Authorization i Content-Type.  
+- [ ] Puc gestionar múltiples peticions concurrents amb Promise.all.  
+- [ ] Sé implementar paginació i paràmetres de consulta.  
+- [ ] Puc manejar errors i codis d'estat HTTP de manera apropiada.  
+- [ ] Entenc els riscos de seguretat de CORS i com gestionar-los.  
+- [ ] Sé implementar cancel·lació de peticions en ambdues tecnologies.  
+- [ ] Puc transformar dades de resposta abans de la seva utilització.  
+- [ ] Entenc com utilitzar interceptors d'Axios per a gestió centralitzada.  
+- [ ] Puc implementar estats de càrrega i error per a millor UX.
+
