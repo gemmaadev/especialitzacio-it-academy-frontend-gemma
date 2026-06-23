@@ -4,8 +4,11 @@
 
 React trenca la interfície en peces petites, independents i reutilitzables. Un component és una funció JS que rep *props* i retorna JSX. Avantatges: reusabilitat, modularitat, escalabilitat, mantenibilitat (canvis localitzats), col·laboració en equip. Risc: fragmentació excessiva i complexitat en compartir estat entre molts components.
 
-| function ProductCard({ product }) {  return \<li\>{product.name} \-- {product.price}€\</li\>;} |
-| :---- |
+``jsx
+function ProductCard({ product }) {
+  return <li>{product.name} — {product.price}€</li>;
+}
+``
 
 React recomana **composició** (ficar components dins d'altres) en lloc d'**herència**, perquè s'adapta millor a la naturalesa jeràrquica de la UI.
 
@@ -17,8 +20,9 @@ Manipular el DOM real és car (reflow/repaint). El **DOM virtual** és una còpi
 
 L'algorisme de diffing és O(n), no O(n³), gràcies a dues heurístiques: tipus diferents \= arbres diferents (reconstrucció total); la prop **`key`** indica quins elements es mantenen estables entre renders.
 
-| {items.map(item \=\> \<li key={item.id}\>{item.text}\</li\>)} // key estable, no l'índex |
-| :---- |
+``jsx
+{items.map(item => <li key={item.id}>{item.text}</li>)} // key estable, no l'índex
+``
 
 **Fiber** (des de React 16\) va fer la reconciliation interrompible i prioritzable: fases de *render* (interrompible) i *commit* (atòmica), amb *double buffering* (current tree vs work-in-progress tree).
 
@@ -26,8 +30,10 @@ L'algorisme de diffing és O(n), no O(n³), gràcies a dues heurístiques: tipus
 
 **Imperatiu**: descrius pas a pas *com* arribar al resultat (manipular el DOM manualment). **Declaratiu**: descrius *què* vols veure; React decideix el com.
 
-| // Declaratiu: el resultat es deriva de l'estat, no de passos manuals\<button disabled={isLoading}\>{isLoading ? 'Carregant...' : 'Comprar'}\</button\> |
-| :---- |
+``jsx
+// Declaratiu: el resultat es deriva de l'estat, no de passos manuals
+<button disabled={isLoading}>{isLoading ? 'Carregant...' : 'Comprar'}</button>
+``
 
 React no és 100% declaratiu: `useRef` i `useEffect` són punts controlats on s'hi cola lògica imperativa (DOM directe, APIs externes).
 
@@ -41,8 +47,10 @@ Regla clau: **majúscula \= component** (referència a variable), **minúscula \
 
 Una funció pura: (1) no modifica res extern que existia abans de cridar-la, (2) mateixa entrada → mateixa sortida, sempre. React assumeix que els components són pures.
 
-| // Pur: depèn només de propsfunction Greeting({ guestNumber }) { return \<h1\>Convidat \#{guestNumber}\</h1\>; } |
-| :---- |
+``jsx
+// Pur: depèn només de props
+function Greeting({ guestNumber }) { return <h1>Convidat #{guestNumber}</h1>; }
+``
 
 Els efectes secundaris (peticions, `Date.now()`, mutacions externes) van en *event handlers* o, com a últim recurs, `useEffect` — mai al cos del render. **Strict Mode** crida cada component dues vegades en dev per detectar impureses.
 
@@ -55,8 +63,10 @@ Funcions que comencen per `use` que connecten un component funcional a estat, ci
 **Regla 1**: només al nivell superior del component (mai dins `if`, `for`, funcions niades).   
 **Regla 2**: només des de components React o altres Hooks personalitzats (mai des de funcions JS normals).
 
-| // Si cal condicionar, la condició va DINS del Hook:useEffect(() \=\> { if (name \!== '') localStorage.setItem('formData', name); }); |
-| :---- |
+``jsx
+// Si cal condicionar, la condició va DINS del Hook:
+useEffect(() => { if (name !== '') localStorage.setItem('formData', name); });
+``
 
 Linter oficial: `eslint-plugin-react-hooks`. Els Hooks personalitzats (prefix `use`) permeten reutilitzar lògica d'estat sense els patrons antics (HOC, render props).
 
@@ -70,8 +80,32 @@ React, per si sol, no inclou routing, SSR ni obtenció de dades — els metafram
 
 ⚠️ *Remix 3* és un projecte separat que abandona React (usa Preact).
 
-| FILOSOFIA DE REACT│├── Components│   → peces reutilitzables, composició \> herència│├── DOM Virtual \+ Reconciliation│   → ReactElement (immutable) vs ReactComponent (amb estat)│   → diff O(n) gràcies a \`key\` | Fiber: interrompible, per fases│├── Declaratiu vs Imperatiu│   → "què" no "com" | useRef/useEffect \= vàlvules d'escapament│├── JSX → React.createElement│   → majúscula=component, minúscula=tag HTML | children=props.children│├── Funcions Pures│   → mateixa entrada→mateixa sortida | sense efectes secundaris al render│   → puresa → predictibilitat \+ testabilitat│├── Hooks│   → ordre de crida fix | nivell superior | només des de components/Hooks│└── Metaframeworks    → Next.js (App Router, RSC) | React Router v7 (ex-Remix) | TanStack Start |
-| :---- |
+``html
+FILOSOFIA DE REACT
+│
+├── Components
+│   → peces reutilitzables, composició > herència
+│
+├── DOM Virtual + Reconciliation
+│   → ReactElement (immutable) vs ReactComponent (amb estat)
+│   → diff O(n) gràcies a `key` | Fiber: interrompible, per fases
+│
+├── Declaratiu vs Imperatiu
+│   → "què" no "com" | useRef/useEffect = vàlvules d'escapament
+│
+├── JSX → React.createElement
+│   → majúscula=component, minúscula=tag HTML | children=props.children
+│
+├── Funcions Pures
+│   → mateixa entrada→mateixa sortida | sense efectes secundaris al render
+│   → puresa → predictibilitat + testabilitat
+│
+├── Hooks
+│   → ordre de crida fix | nivell superior | només des de components/Hooks
+│
+└── Metaframeworks
+    → Next.js (App Router, RSC) | React Router v7 (ex-Remix) | TanStack Start
+``
 
  
 
