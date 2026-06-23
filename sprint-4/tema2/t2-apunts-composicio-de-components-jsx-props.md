@@ -68,7 +68,7 @@ Per "comunicar cap amunt", el pare passa una **funció** com a prop que el fill 
 
 ## **6\. Tipar props amb TypeScript**
 
-```jsx
+```tsx
 type AvatarProps = {
   person: { name: string; imageUrl: string };
   size?: number; // opcional
