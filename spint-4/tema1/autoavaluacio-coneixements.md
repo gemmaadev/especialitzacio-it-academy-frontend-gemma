@@ -1,0 +1,22 @@
+# **Autoavaluació S4.React Tema 1**
+
+- [ ] Puc explicar les diferències clau entre SPAs i aplicacions multipàgina tradicionals.  
+        
+- [ ] Entenc com la composició de components permet crear interfícies complexes a partir de blocs simples.  
+        
+- [ ] Sé descriure el flux de renderització de React i el rol del DOM virtual.  
+        
+- [ ] Puc diferenciar entre enfocaments declaratius i imperatius en el desenvolupament d'interfícies.  
+        
+- [ ] Reconec quan un component és pur i quins beneficis això comporta.  
+        
+- [ ] Entenc els problemes que resolen els Hooks i la seva relació amb el cicle de vida dels components.  
+        
+- [ ] Puc identificar els principals metaframeworks de React i els problemes específics que resolen.  
+        
+- [ ] Sè traduir JSX a crides de React.createElement equivalents.  
+        
+- [ ] Entenc els problemes que resolen els Hooks i la seva relació amb el cicle de vida dels components.  
+        
+- [ ] Entenc com la reconciliació de React optimitza les actualitzacions del DOM.
+
